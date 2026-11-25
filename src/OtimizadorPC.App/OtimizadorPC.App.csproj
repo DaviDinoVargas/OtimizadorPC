@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>OtimizadorPC.App</RootNamespace>
+    <AssemblyName>OtimizadorPC</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OtimizadorPC.Core\OtimizadorPC.Core.csproj" />
+    <ProjectReference Include="..\OtimizadorPC.Infrastructure\OtimizadorPC.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\**\*.png;Assets\**\*.ico" />
+  </ItemGroup>
+
+</Project>
