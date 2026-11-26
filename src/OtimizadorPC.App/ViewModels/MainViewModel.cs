@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 using OtimizadorPC.App.Navigation;
 using OtimizadorPC.Core.Abstractions;
@@ -37,6 +38,9 @@ public sealed partial class MainViewModel : ObservableObject
         [
             new NavItem { Key = "personalizacao", Title = "Personalização", Icon = SymbolRegular.PaintBrush24, ViewModelType = typeof(SettingsViewModel) },
         ];
+
+        // Qualquer tela pode pedir navegação (ex.: botão "Resolver" de uma recomendação)
+        WeakReferenceMessenger.Default.Register<NavigateMessage>(this, (_, m) => NavigateTo(m.Key));
 
         SelectedNav = MainItems[0];
     }

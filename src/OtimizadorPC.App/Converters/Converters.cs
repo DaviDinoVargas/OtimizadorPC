@@ -78,3 +78,83 @@ public sealed class PercentToWidthConverter : IMultiValueConverter
     public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
         => throw new NotSupportedException();
 }
+
+/// <summary>Número de colunas conforme a largura disponível (layout responsivo).</summary>
+public sealed class WidthToColumnsConverter : IValueConverter
+{
+    public double WideThreshold { get; set; } = 1000;
+    public int Wide { get; set; } = 4;
+    public int Narrow { get; set; } = 2;
+
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is double w && w >= WideThreshold ? Wide : Narrow;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+/// <summary>Cor de alerta para níveis (0–1): verde/destaque, âmbar acima de 80%, vermelho acima de 90%.</summary>
+public sealed class LevelToBrushConverter : IValueConverter
+{
+    public double Warning { get; set; } = 0.8;
+    public double Critical { get; set; } = 0.9;
+
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        var v = value is double d ? d : 0;
+        if (v > 1.0001) v /= 100;
+        var key = v >= Critical ? "SystemFillColorCriticalBrush" : v >= Warning ? "SystemFillColorCautionBrush" : "AccentFillColorDefaultBrush";
+        return Application.Current.TryFindResource(key) as Brush ?? Brushes.Gray;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+public sealed class SeverityToBrushConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        var key = value?.ToString() switch
+        {
+            "Critico" => "SystemFillColorCriticalBrush",
+            "Aviso" => "SystemFillColorCautionBrush",
+            _ => "SystemFillColorAttentionBrush"
+        };
+        return Application.Current.TryFindResource(key) as Brush ?? Brushes.Gray;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+public sealed class SeverityToSymbolConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value?.ToString() switch
+        {
+            "Critico" => Wpf.Ui.Controls.SymbolRegular.ErrorCircle24,
+            "Aviso" => Wpf.Ui.Controls.SymbolRegular.Warning24,
+            _ => Wpf.Ui.Controls.SymbolRegular.Lightbulb24
+        };
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+/// <summary>Largura de cada cartão: metade da área em telas largas, largura total nas estreitas.</summary>
+public sealed class ColumnItemWidthConverter : IValueConverter
+{
+    public double WideThreshold { get; set; } = 1100;
+    public double Gap { get; set; } = 12;
+
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is not double w || w <= 0) return double.NaN;
+        var cols = w >= WideThreshold ? 2 : 1;
+        return Math.Max(200, Math.Floor(w / cols) - Gap);
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}

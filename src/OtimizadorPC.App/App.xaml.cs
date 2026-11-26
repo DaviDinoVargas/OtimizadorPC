@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using OtimizadorPC.App.Services;
 using OtimizadorPC.App.ViewModels;
 using OtimizadorPC.Core.Abstractions;
+using OtimizadorPC.Infrastructure.Hardware;
 using OtimizadorPC.Infrastructure.Settings;
 using Serilog;
 
@@ -48,9 +49,13 @@ public partial class App : Application
     {
         // Infraestrutura
         services.AddSingleton<ISettingsService, JsonSettingsService>();
+        services.AddSingleton<IHardwareInfoService, WmiHardwareInfoService>();
+        services.AddSingleton<ISensorService, LhmSensorService>();
 
         // Serviços da interface
         services.AddSingleton<ThemeService>();
+        services.AddSingleton<SensorMonitor>();
+        services.AddSingleton<SnapshotProvider>();
 
         // Janela e páginas
         services.AddSingleton<MainWindow>();
