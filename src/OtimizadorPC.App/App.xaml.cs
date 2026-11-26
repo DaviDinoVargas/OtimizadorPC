@@ -8,6 +8,7 @@ using OtimizadorPC.App.ViewModels;
 using OtimizadorPC.Core.Abstractions;
 using OtimizadorPC.Infrastructure.Cleanup;
 using OtimizadorPC.Infrastructure.Hardware;
+using OtimizadorPC.Infrastructure.Optimization;
 using OtimizadorPC.Infrastructure.Settings;
 using Serilog;
 
@@ -54,6 +55,14 @@ public partial class App : Application
         services.AddSingleton<ISensorService, LhmSensorService>();
         services.AddSingleton<ICleanupService, CleanupService>();
         services.AddSingleton<IDialogService, DialogService>();
+        services.AddSingleton<IStartupService, StartupService>();
+        services.AddSingleton<IServiceTuner, ServiceTuner>();
+        services.AddSingleton<IScheduledTaskService, ScheduledTaskService>();
+        services.AddSingleton<ITweakService, TweakService>();
+        services.AddSingleton<IPowerService, PowerService>();
+        services.AddSingleton<IPageFileService, PageFileService>();
+        services.AddSingleton<IAppxService, AppxService>();
+        services.AddSingleton<IRestorePointService, RestorePointService>();
 
         // Serviços da interface
         services.AddSingleton<ThemeService>();
