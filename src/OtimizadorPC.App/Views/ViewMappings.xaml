@@ -1,0 +1,99 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:vm="clr-namespace:OtimizadorPC.App.ViewModels"
+                    xmlns:views="clr-namespace:OtimizadorPC.App.Views"
+                    xmlns:c="clr-namespace:OtimizadorPC.App.Controls"
+                    xmlns:anim="clr-namespace:OtimizadorPC.App.Controls.Animations">
+
+    <!-- Liga cada ViewModel de página à sua View -->
+
+    <DataTemplate x:Key="ComingSoon">
+        <Border Style="{StaticResource SectionCard}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource SectionTitle}" Text="Módulo em desenvolvimento" />
+                <TextBlock Style="{StaticResource CaptionText}" Text="Esta área será liberada em uma próxima versão." />
+            </StackPanel>
+        </Border>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
+        <ScrollViewer Padding="{DynamicResource PagePadding}">
+            <StackPanel>
+                <c:PageHeader Title="Início" Subtitle="Visão geral do desempenho do computador">
+                    <c:PageHeader.Animation><anim:RadarAnimation /></c:PageHeader.Animation>
+                </c:PageHeader>
+                <ContentControl ContentTemplate="{StaticResource ComingSoon}" />
+            </StackPanel>
+        </ScrollViewer>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:MachineInfoViewModel}">
+        <ScrollViewer Padding="{DynamicResource PagePadding}">
+            <StackPanel>
+                <c:PageHeader Title="Informações" Subtitle="Processador, placa-mãe, memória, vídeo, discos e sensores">
+                    <c:PageHeader.Animation><anim:ChipAnimation /></c:PageHeader.Animation>
+                </c:PageHeader>
+                <ContentControl ContentTemplate="{StaticResource ComingSoon}" />
+            </StackPanel>
+        </ScrollViewer>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:CleanupViewModel}">
+        <ScrollViewer Padding="{DynamicResource PagePadding}">
+            <StackPanel>
+                <c:PageHeader Title="Limpeza" Subtitle="Remova arquivos temporários, caches e restos de programas">
+                    <c:PageHeader.Animation><anim:BroomAnimation /></c:PageHeader.Animation>
+                </c:PageHeader>
+                <ContentControl ContentTemplate="{StaticResource ComingSoon}" />
+            </StackPanel>
+        </ScrollViewer>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:OptimizationViewModel}">
+        <ScrollViewer Padding="{DynamicResource PagePadding}">
+            <StackPanel>
+                <c:PageHeader Title="Otimização" Subtitle="Inicialização, serviços, energia e ajustes do Windows">
+                    <c:PageHeader.Animation><anim:GaugeAnimation /></c:PageHeader.Animation>
+                </c:PageHeader>
+                <ContentControl ContentTemplate="{StaticResource ComingSoon}" />
+            </StackPanel>
+        </ScrollViewer>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:ProcessesViewModel}">
+        <ScrollViewer Padding="{DynamicResource PagePadding}">
+            <StackPanel>
+                <c:PageHeader Title="Processos" Subtitle="Veja o que está rodando e encerre o que não é necessário">
+                    <c:PageHeader.Animation><anim:EqualizerAnimation /></c:PageHeader.Animation>
+                </c:PageHeader>
+                <ContentControl ContentTemplate="{StaticResource ComingSoon}" />
+            </StackPanel>
+        </ScrollViewer>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:DinosizeViewModel}">
+        <ScrollViewer Padding="{DynamicResource PagePadding}">
+            <StackPanel>
+                <c:PageHeader Title="Dinosize" Subtitle="Descubra o que ocupa espaço nos seus discos">
+                    <c:PageHeader.Animation><anim:TilesAnimation /></c:PageHeader.Animation>
+                </c:PageHeader>
+                <ContentControl ContentTemplate="{StaticResource ComingSoon}" />
+            </StackPanel>
+        </ScrollViewer>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:OverclockViewModel}">
+        <ScrollViewer Padding="{DynamicResource PagePadding}">
+            <StackPanel>
+                <c:PageHeader Title="Overclock" Subtitle="Benchmarks, teste de estresse e ajuste de desempenho">
+                    <c:PageHeader.Animation><anim:PaperPlaneAnimation /></c:PageHeader.Animation>
+                </c:PageHeader>
+                <ContentControl ContentTemplate="{StaticResource ComingSoon}" />
+            </StackPanel>
+        </ScrollViewer>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+        <views:SettingsView />
+    </DataTemplate>
+</ResourceDictionary>

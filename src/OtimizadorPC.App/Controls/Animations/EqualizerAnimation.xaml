@@ -1,0 +1,39 @@
+<local:AnimatedIcon x:Class="OtimizadorPC.App.Controls.Animations.EqualizerAnimation"
+                    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:OtimizadorPC.App.Controls.Animations"
+                    Width="120" Height="72">
+    <!-- Processos: barras de atividade subindo e descendo -->
+    <local:AnimatedIcon.Resources>
+        <Storyboard x:Key="Loop">
+            <DoubleAnimation Storyboard.TargetName="B1" Storyboard.TargetProperty="ScaleY" From="0.25" To="1" Duration="0:0:0.55" AutoReverse="True" RepeatBehavior="Forever"><DoubleAnimation.EasingFunction><SineEase /></DoubleAnimation.EasingFunction></DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="B2" Storyboard.TargetProperty="ScaleY" From="0.8" To="0.2" Duration="0:0:0.7" AutoReverse="True" RepeatBehavior="Forever"><DoubleAnimation.EasingFunction><SineEase /></DoubleAnimation.EasingFunction></DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="B3" Storyboard.TargetProperty="ScaleY" From="0.4" To="0.95" Duration="0:0:0.45" AutoReverse="True" RepeatBehavior="Forever"><DoubleAnimation.EasingFunction><SineEase /></DoubleAnimation.EasingFunction></DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="B4" Storyboard.TargetProperty="ScaleY" From="1" To="0.3" Duration="0:0:0.6" AutoReverse="True" RepeatBehavior="Forever"><DoubleAnimation.EasingFunction><SineEase /></DoubleAnimation.EasingFunction></DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="B5" Storyboard.TargetProperty="ScaleY" From="0.3" To="0.85" Duration="0:0:0.5" AutoReverse="True" RepeatBehavior="Forever"><DoubleAnimation.EasingFunction><SineEase /></DoubleAnimation.EasingFunction></DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="B6" Storyboard.TargetProperty="ScaleY" From="0.6" To="0.15" Duration="0:0:0.65" AutoReverse="True" RepeatBehavior="Forever"><DoubleAnimation.EasingFunction><SineEase /></DoubleAnimation.EasingFunction></DoubleAnimation>
+        </Storyboard>
+    </local:AnimatedIcon.Resources>
+
+    <Canvas>
+        <Line X1="16" Y1="66" X2="104" Y2="66" StrokeThickness="1.5" Stroke="{DynamicResource ControlStrokeColorDefaultBrush}" />
+        <Rectangle Canvas.Left="22" Canvas.Top="16" Width="10" Height="48" RadiusX="3" RadiusY="3" Fill="{DynamicResource AccentFillColorDefaultBrush}" RenderTransformOrigin="0.5,1">
+            <Rectangle.RenderTransform><ScaleTransform x:Name="B1" ScaleY="0.6" /></Rectangle.RenderTransform>
+        </Rectangle>
+        <Rectangle Canvas.Left="36" Canvas.Top="16" Width="10" Height="48" RadiusX="3" RadiusY="3" Fill="{DynamicResource AccentFillColorDefaultBrush}" Opacity="0.85" RenderTransformOrigin="0.5,1">
+            <Rectangle.RenderTransform><ScaleTransform x:Name="B2" ScaleY="0.4" /></Rectangle.RenderTransform>
+        </Rectangle>
+        <Rectangle Canvas.Left="50" Canvas.Top="16" Width="10" Height="48" RadiusX="3" RadiusY="3" Fill="{DynamicResource AccentFillColorDefaultBrush}" Opacity="0.7" RenderTransformOrigin="0.5,1">
+            <Rectangle.RenderTransform><ScaleTransform x:Name="B3" ScaleY="0.8" /></Rectangle.RenderTransform>
+        </Rectangle>
+        <Rectangle Canvas.Left="64" Canvas.Top="16" Width="10" Height="48" RadiusX="3" RadiusY="3" Fill="{DynamicResource AccentFillColorDefaultBrush}" Opacity="0.85" RenderTransformOrigin="0.5,1">
+            <Rectangle.RenderTransform><ScaleTransform x:Name="B4" ScaleY="0.5" /></Rectangle.RenderTransform>
+        </Rectangle>
+        <Rectangle Canvas.Left="78" Canvas.Top="16" Width="10" Height="48" RadiusX="3" RadiusY="3" Fill="{DynamicResource AccentFillColorDefaultBrush}" Opacity="0.7" RenderTransformOrigin="0.5,1">
+            <Rectangle.RenderTransform><ScaleTransform x:Name="B5" ScaleY="0.7" /></Rectangle.RenderTransform>
+        </Rectangle>
+        <Rectangle Canvas.Left="92" Canvas.Top="16" Width="10" Height="48" RadiusX="3" RadiusY="3" Fill="{DynamicResource AccentFillColorDefaultBrush}" Opacity="0.55" RenderTransformOrigin="0.5,1">
+            <Rectangle.RenderTransform><ScaleTransform x:Name="B6" ScaleY="0.3" /></Rectangle.RenderTransform>
+        </Rectangle>
+    </Canvas>
+</local:AnimatedIcon>
