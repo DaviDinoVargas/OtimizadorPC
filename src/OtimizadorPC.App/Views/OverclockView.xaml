@@ -1,0 +1,372 @@
+<UserControl x:Class="OtimizadorPC.App.Views.OverclockView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:vm="clr-namespace:OtimizadorPC.App.ViewModels"
+             xmlns:oc="clr-namespace:OtimizadorPC.Core.Overclock;assembly=OtimizadorPC.Core"
+             xmlns:c="clr-namespace:OtimizadorPC.App.Controls"
+             xmlns:anim="clr-namespace:OtimizadorPC.App.Controls.Animations"
+             xmlns:conv="clr-namespace:OtimizadorPC.App.Converters"
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance vm:OverclockViewModel}">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/OtimizadorPC;component/Styles/Tabs.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <conv:EnumEqualsConverter x:Key="EnumEq" />
+            <conv:EnumToVisibilityConverter x:Key="Section" />
+            <conv:BoolToVisibilityConverter x:Key="BoolVis" />
+            <conv:BoolToVisibilityConverter x:Key="InvBoolVis" Invert="True" />
+            <conv:NullToVisibilityConverter x:Key="NullVis" />
+            <conv:InverseBoolConverter x:Key="InvBool" />
+            <conv:SupportToBrushConverter x:Key="SupportBrush" />
+            <conv:SuccessToBrushConverter x:Key="OkBrush" />
+
+            <Style x:Key="ChangeText" TargetType="TextBlock">
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Improved}" Value="True">
+                        <Setter Property="Foreground" Value="{DynamicResource SystemFillColorSuccessBrush}" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Worse}" Value="True">
+                        <Setter Property="Foreground" Value="{DynamicResource SystemFillColorCriticalBrush}" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <ScrollViewer Padding="{DynamicResource PagePadding}">
+        <StackPanel>
+            <c:PageHeader Title="Overclock" Subtitle="Meça o desempenho, teste a estabilidade e extraia mais da sua placa de vídeo com segurança">
+                <c:PageHeader.Animation><anim:PaperPlaneAnimation /></c:PageHeader.Animation>
+            </c:PageHeader>
+
+            <!-- Sensores ao vivo -->
+            <WrapPanel Margin="0,0,0,10">
+                <Border Style="{StaticResource Tag}" Padding="10,4">
+                    <TextBlock FontSize="12"><Run Text="CPU" Foreground="{DynamicResource TextFillColorSecondaryBrush}" /> <Run Text="{Binding CurrentCpuTemp, StringFormat={}{0:0} °C, TargetNullValue=—, Mode=OneWay}" /></TextBlock>
+                </Border>
+                <Border Style="{StaticResource Tag}" Padding="10,4">
+                    <TextBlock FontSize="12"><Run Text="GPU" Foreground="{DynamicResource TextFillColorSecondaryBrush}" /> <Run Text="{Binding CurrentGpuTemp, StringFormat={}{0:0} °C, TargetNullValue=—, Mode=OneWay}" /></TextBlock>
+                </Border>
+                <Border Style="{StaticResource Tag}" Padding="10,4">
+                    <TextBlock FontSize="12"><Run Text="Clock GPU" Foreground="{DynamicResource TextFillColorSecondaryBrush}" /> <Run Text="{Binding CurrentGpuClock, StringFormat={}{0:0} MHz, TargetNullValue=—, Mode=OneWay}" /></TextBlock>
+                </Border>
+                <Border Style="{StaticResource Tag}" Padding="10,4">
+                    <TextBlock FontSize="12"><Run Text="Consumo GPU" Foreground="{DynamicResource TextFillColorSecondaryBrush}" /> <Run Text="{Binding CurrentGpuPower, StringFormat={}{0:0} W, TargetNullValue=—, Mode=OneWay}" /></TextBlock>
+                </Border>
+            </WrapPanel>
+
+            <ListBox Style="{StaticResource PillTabList}" ItemsSource="{Binding Sections}" SelectedIndex="{Binding SelectedSection}" Margin="0,0,0,10">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem" BasedOn="{StaticResource PillTabItem}">
+                        <Setter Property="AutomationProperties.Name" Value="{Binding}" />
+                    </Style>
+                </ListBox.ItemContainerStyle>
+            </ListBox>
+
+            <ui:InfoBar Margin="0,0,0,10" IsOpen="True" IsClosable="False" Title="Overclock" Severity="Informational" Message="{Binding StatusMessage}"
+                        Visibility="{Binding StatusMessage, Converter={StaticResource NullVis}}" />
+
+            <!-- ======================= Visão geral ======================= -->
+            <StackPanel Visibility="{Binding SelectedSection, Converter={StaticResource Section}, ConverterParameter=0}">
+                <ItemsControl ItemsSource="{Binding Capabilities}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:CapabilityCard}">
+                            <Border Style="{StaticResource HoverCard}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <ui:SymbolIcon Symbol="{Binding Icon}" FontSize="28" VerticalAlignment="Top" Margin="0,2,14,0"
+                                                   Foreground="{Binding Capability.Support, Converter={StaticResource SupportBrush}}" />
+                                    <StackPanel Grid.Column="1">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Style="{StaticResource SectionTitle}" Text="{Binding Capability.Component}" />
+                                            <Border Style="{StaticResource Tag}" Margin="10,0,0,4" BorderBrush="{Binding Capability.Support, Converter={StaticResource SupportBrush}}">
+                                                <TextBlock FontSize="11" Foreground="{Binding Capability.Support, Converter={StaticResource SupportBrush}}" Text="{Binding SupportText}" />
+                                            </Border>
+                                        </StackPanel>
+                                        <TextBlock Style="{StaticResource CaptionText}" Text="{Binding Capability.Model}" />
+                                        <TextBlock Style="{StaticResource BodyText}" Margin="0,6,0,0" Text="{Binding Capability.Explanation}" />
+                                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0" Visibility="{Binding Capability.HowTo, Converter={StaticResource NullVis}}">
+                                            <ui:SymbolIcon Symbol="Lightbulb24" FontSize="16" VerticalAlignment="Top" Margin="0,0,8,0" Foreground="{DynamicResource SystemFillColorAttentionBrush}" />
+                                            <TextBlock Style="{StaticResource CaptionText}" MaxWidth="820" Text="{Binding Capability.HowTo}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Border Style="{StaticResource SectionCard}">
+                    <Grid>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="Ajuste do processador pelo Windows" />
+                            <TextBlock Style="{StaticResource CaptionText}" MaxWidth="700" HorizontalAlignment="Left"
+                                       Text="Funciona em qualquer processador (Intel ou AMD): o Windows deixa de reduzir o clock em repouso e usa o turbo de forma agressiva. Pode ser desfeito a qualquer momento." />
+                            <TextBlock Style="{StaticResource CaptionText}" Margin="0,6,0,0" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" Text="{Binding CpuPowerText}" />
+                        </StackPanel>
+                        <ui:ToggleSwitch HorizontalAlignment="Right" VerticalAlignment="Center" Content="Modo desempenho" IsChecked="{Binding CpuPerformanceMode}" />
+                    </Grid>
+                </Border>
+            </StackPanel>
+
+            <!-- ======================= Benchmarks ======================= -->
+            <StackPanel Visibility="{Binding SelectedSection, Converter={StaticResource Section}, ConverterParameter=1}">
+                <Border Style="{StaticResource SectionCard}">
+                    <StackPanel>
+                        <WrapPanel>
+                            <StackPanel Margin="0,0,16,8">
+                                <TextBlock Style="{StaticResource CaptionText}" Text="Nome desta medição" />
+                                <ui:TextBox Width="220" Margin="0,4,0,0" Text="{Binding RunLabel, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Ex.: Antes do overclock" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,16,8">
+                                <TextBlock Style="{StaticResource CaptionText}" Text="Disco para o teste" />
+                                <ComboBox Width="120" Margin="0,4,0,0" ItemsSource="{Binding Drives}" SelectedItem="{Binding SelectedDrive}" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,16,8">
+                                <TextBlock Style="{StaticResource CaptionText}" Text="Comparar com" />
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                    <ComboBox Width="260" ItemsSource="{Binding History}" SelectedItem="{Binding CompareWith}" DisplayMemberPath="Display" />
+                                    <ui:Button Margin="6,0,0,0" Icon="{ui:SymbolIcon Delete24}" ToolTip="Apagar a medição selecionada" Command="{Binding DeleteRunCommand}"
+                                               CommandParameter="{Binding CompareWith}" AutomationProperties.Name="Apagar medição" />
+                                </StackPanel>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" Margin="0,0,0,8">
+                                <ui:Button Appearance="Primary" Content="Executar benchmarks" Icon="{ui:SymbolIcon Play24}" Command="{Binding RunAllBenchmarksCommand}"
+                                           IsEnabled="{Binding IsBenchmarking, Converter={StaticResource InvBool}}" />
+                                <ui:Button Margin="8,0,0,0" Content="Cancelar" Command="{Binding StopCommand}" Visibility="{Binding IsBenchmarking, Converter={StaticResource BoolVis}}" />
+                            </StackPanel>
+                        </WrapPanel>
+                        <TextBlock Style="{StaticResource CaptionText}" Text="{Binding BenchSummary}" Visibility="{Binding BenchSummary, Converter={StaticResource NullVis}}" />
+                    </StackPanel>
+                </Border>
+
+                <ItemsControl ItemsSource="{Binding Benchmarks}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:BenchmarkRow}">
+                            <Border Style="{StaticResource RowCard}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="260" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="140" />
+                                        <ColumnDefinition Width="80" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Style="{StaticResource BodyText}" FontWeight="SemiBold" Text="{Binding Name}" />
+                                        <ProgressBar Style="{StaticResource ThinProgress}" Height="3" Margin="0,4,0,0" Maximum="100" Value="{Binding Progress}"
+                                                     Visibility="{Binding IsRunning, Converter={StaticResource BoolVis}}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Margin="12,0" VerticalAlignment="Center">
+                                        <Grid Height="10" Margin="0,0,0,3">
+                                            <ProgressBar Style="{StaticResource ThinProgress}" Height="8" Maximum="1" Value="{Binding ValueBar, Mode=OneWay}" />
+                                        </Grid>
+                                        <ProgressBar Style="{StaticResource ThinProgress}" Height="4" Maximum="1" Value="{Binding PreviousBar, Mode=OneWay}"
+                                                     Foreground="{DynamicResource TextFillColorTertiaryBrush}" ToolTip="Medição anterior" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <TextBlock Style="{StaticResource BodyText}" FontWeight="SemiBold" HorizontalAlignment="Right" Text="{Binding ValueText}" />
+                                        <TextBlock Style="{StaticResource CaptionText}" HorizontalAlignment="Right" Text="{Binding PreviousText, StringFormat=antes: {0}}" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="3" Style="{StaticResource ChangeText}" HorizontalAlignment="Right" VerticalAlignment="Center" Text="{Binding ChangeText}" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+
+            <!-- ======================= Teste de estresse ======================= -->
+            <StackPanel Visibility="{Binding SelectedSection, Converter={StaticResource Section}, ConverterParameter=2}">
+                <Border Style="{StaticResource SectionCard}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="Teste de estabilidade" />
+                        <TextBlock Style="{StaticResource CaptionText}" Margin="0,0,0,10" MaxWidth="760" HorizontalAlignment="Left"
+                                   Text="Carrega o componente ao máximo repetindo cálculos cujo resultado é conhecido. Qualquer resultado diferente é um erro: sinal de overclock instável ou superaquecimento. O teste para sozinho se a temperatura passar do limite." />
+                        <WrapPanel>
+                            <RadioButton Style="{StaticResource SegmentButton}" GroupName="Alvo" Content="Processador" IsChecked="{Binding StressOnGpu, Converter={StaticResource EnumEq}, ConverterParameter=False}" />
+                            <RadioButton Style="{StaticResource SegmentButton}" GroupName="Alvo" Content="Placa de vídeo" IsChecked="{Binding StressOnGpu, Converter={StaticResource EnumEq}, ConverterParameter=True}" />
+                            <ComboBox Width="120" Margin="12,0,0,6" ItemsSource="{Binding Durations}" SelectedItem="{Binding StressMinutes}" ItemStringFormat="{}{0} min" />
+                            <ui:Button Margin="12,0,0,6" Appearance="Primary" Content="Iniciar" Icon="{ui:SymbolIcon Play24}" Command="{Binding StartStressCommand}"
+                                       IsEnabled="{Binding IsStressing, Converter={StaticResource InvBool}}" />
+                            <ui:Button Margin="8,0,0,6" Content="Parar" Icon="{ui:SymbolIcon Stop24}" Command="{Binding StopCommand}" Visibility="{Binding IsStressing, Converter={StaticResource BoolVis}}" />
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource SectionCard}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <UniformGrid Columns="3" Width="420">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource CaptionText}" Text="Tempo" />
+                                <TextBlock Style="{StaticResource BigNumber}" Text="{Binding StressElapsed}" />
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource CaptionText}" Text="Cálculos" />
+                                <c:CountUpText Style="{StaticResource BigNumber}" Format="Inteiro" Value="{Binding StressIterations}" />
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource CaptionText}" Text="Erros" />
+                                <c:CountUpText Style="{StaticResource BigNumber}" Format="Inteiro" Value="{Binding StressErrors}" />
+                            </StackPanel>
+                        </UniformGrid>
+                        <StackPanel Grid.Column="1" Margin="16,0,0,0">
+                            <TextBlock Style="{StaticResource CaptionText}" Text="Temperatura durante o teste (°C)" />
+                            <c:Sparkline Height="70" Values="{Binding StressTemps}" Maximum="100" Stroke="#EF4444" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource SectionCard}" Visibility="{Binding StressVerdict, Converter={StaticResource NullVis}}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="CheckmarkCircle24" FontSize="26" Margin="0,0,12,0" Foreground="{Binding StressStable, Converter={StaticResource OkBrush}}" />
+                        <TextBlock Style="{StaticResource BodyText}" VerticalAlignment="Center" MaxWidth="820" Foreground="{Binding StressStable, Converter={StaticResource OkBrush}}"
+                                   Text="{Binding StressVerdict}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- ======================= Overclock da GPU ======================= -->
+            <StackPanel Visibility="{Binding SelectedSection, Converter={StaticResource Section}, ConverterParameter=3}">
+                <ui:InfoBar IsOpen="True" IsClosable="False" Severity="Warning" Title="Overclock de GPU indisponível"
+                            Message="Esta função usa o driver NVIDIA. Em placas AMD use o AMD Software (Desempenho > Ajuste > Overclock automático) e valide aqui com o teste de estresse."
+                            Visibility="{Binding GpuSupported, Converter={StaticResource InvBoolVis}}" />
+
+                <StackPanel Visibility="{Binding GpuSupported, Converter={StaticResource BoolVis}}">
+                    <Border Style="{StaticResource SectionCard}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="{Binding GpuName}" />
+                            <TextBlock Style="{StaticResource CaptionText}" Text="{Binding AppliedText}" />
+                            <Grid Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="170" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="90" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Style="{StaticResource BodyText}" VerticalAlignment="Center" Text="Clock do núcleo" />
+                                <Slider Grid.Column="1" Minimum="{Binding CoreMin}" Maximum="{Binding CoreMax}" TickFrequency="5" IsSnapToTickEnabled="True" Value="{Binding CoreOffset}" />
+                                <TextBlock Grid.Column="2" Style="{StaticResource BodyText}" FontWeight="SemiBold" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                           Text="{Binding CoreOffset, StringFormat={}{0:+0;-0;0} MHz}" />
+                                <TextBlock Grid.Row="1" Style="{StaticResource BodyText}" VerticalAlignment="Center" Margin="0,10,0,0" Text="Clock da memória" />
+                                <Slider Grid.Row="1" Grid.Column="1" Margin="0,10,0,0" Minimum="{Binding MemoryMin}" Maximum="{Binding MemoryMax}" TickFrequency="25" IsSnapToTickEnabled="True" Value="{Binding MemoryOffset}" />
+                                <TextBlock Grid.Row="1" Grid.Column="2" Margin="0,10,0,0" Style="{StaticResource BodyText}" FontWeight="SemiBold" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                           Text="{Binding MemoryOffset, StringFormat={}{0:+0;-0;0} MHz}" />
+                            </Grid>
+                            <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                <ui:Button Appearance="Primary" Content="Aplicar" Command="{Binding ApplyGpuCommand}" IsEnabled="{Binding IsTuning, Converter={StaticResource InvBool}}" />
+                                <ui:Button Margin="8,0,0,0" Content="Restaurar padrão" Icon="{ui:SymbolIcon ArrowClockwise24}" Command="{Binding ResetGpuCommand}" />
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource CaptionText}" Margin="0,8,0,0" Text="Os valores voltam ao padrão de fábrica sempre que o computador reinicia." />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SectionCard}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="Encontrar o limite automaticamente" />
+                            <TextBlock Style="{StaticResource CaptionText}" Margin="0,0,0,10" MaxWidth="760" HorizontalAlignment="Left"
+                                       Text="Sobe o clock em passos, testa cada passo com carga verificada e para no primeiro erro, travamento do driver ou temperatura acima de 85 °C — ficando no último valor estável menos uma margem de segurança." />
+                            <WrapPanel>
+                                <TextBlock Style="{StaticResource CaptionText}" VerticalAlignment="Center" Margin="0,0,8,6" Text="Teste por passo:" />
+                                <RadioButton Style="{StaticResource SegmentButton}" GroupName="Passo" Content="15 s (rápido)" IsChecked="{Binding StepSeconds, Converter={StaticResource EnumEq}, ConverterParameter=15}" />
+                                <RadioButton Style="{StaticResource SegmentButton}" GroupName="Passo" Content="30 s" IsChecked="{Binding StepSeconds, Converter={StaticResource EnumEq}, ConverterParameter=30}" />
+                                <RadioButton Style="{StaticResource SegmentButton}" GroupName="Passo" Content="60 s (mais seguro)" IsChecked="{Binding StepSeconds, Converter={StaticResource EnumEq}, ConverterParameter=60}" />
+                                <ui:Button Margin="12,0,0,6" Appearance="Primary" Content="Começar" Icon="{ui:SymbolIcon Rocket24}" Command="{Binding AutoTuneCommand}"
+                                           IsEnabled="{Binding IsTuning, Converter={StaticResource InvBool}}" />
+                                <ui:Button Margin="8,0,0,6" Content="Parar" Icon="{ui:SymbolIcon Stop24}" Command="{Binding StopCommand}" Visibility="{Binding IsTuning, Converter={StaticResource BoolVis}}" />
+                            </WrapPanel>
+
+                            <ProgressBar IsIndeterminate="True" Height="4" Margin="0,6,0,6" Visibility="{Binding IsTuning, Converter={StaticResource BoolVis}}" />
+
+                            <ItemsControl ItemsSource="{Binding TuneLog}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type oc:AutoTuneStep}">
+                                        <Grid Margin="0,2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="22" />
+                                                <ColumnDefinition Width="140" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Ellipse Width="8" Height="8" Fill="{Binding Passed, Converter={StaticResource OkBrush}}" />
+                                            <TextBlock Grid.Column="1" Style="{StaticResource CaptionText}" FontWeight="SemiBold" Text="{Binding Stage}" />
+                                            <TextBlock Grid.Column="2" Style="{StaticResource CaptionText}" Text="{Binding Detail}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Relatório antes x depois -->
+                    <Border Style="{StaticResource SectionCard}" Visibility="{Binding HasReport, Converter={StaticResource BoolVis}}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <anim:SuccessAnimation Width="56" Height="56" />
+                                <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Style="{StaticResource SectionTitle}" Text="Resultado do overclock" />
+                                    <TextBlock Style="{StaticResource CaptionText}" Text="{Binding ReportOffsets}" />
+                                </StackPanel>
+                            </StackPanel>
+                            <Grid Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="170" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Style="{StaticResource CaptionText}" Text="Desempenho" />
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Style="{StaticResource BodyText}" FontWeight="SemiBold" Text="{Binding ReportPerformance}" />
+                                    <ProgressBar Style="{StaticResource ThinProgress}" Height="4" Margin="0,4,0,2" Maximum="{Binding ReportAfter}" Value="{Binding ReportBefore}"
+                                                 Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                                    <ProgressBar Style="{StaticResource ThinProgress}" Height="6" Maximum="{Binding ReportAfter}" Value="{Binding ReportAfter}" />
+                                </StackPanel>
+                                <TextBlock Grid.Row="1" Margin="0,10,0,0" Style="{StaticResource CaptionText}" Text="Temperatura" />
+                                <TextBlock Grid.Row="1" Grid.Column="1" Margin="0,10,0,0" Style="{StaticResource BodyText}" Text="{Binding ReportTemperature}" />
+                                <TextBlock Grid.Row="2" Margin="0,6,0,0" Style="{StaticResource CaptionText}" Text="Consumo" />
+                                <TextBlock Grid.Row="2" Grid.Column="1" Margin="0,6,0,0" Style="{StaticResource BodyText}" Text="{Binding ReportPower}" />
+                                <TextBlock Grid.Row="3" Margin="0,6,0,0" Style="{StaticResource CaptionText}" Text="Custo na conta de luz" />
+                                <TextBlock Grid.Row="3" Grid.Column="1" Margin="0,6,0,0" Style="{StaticResource BodyText}" Text="{Binding ReportCost}" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SectionCard}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="Dados para o cálculo de custo" />
+                            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                <StackPanel Margin="0,0,16,0">
+                                    <TextBlock Style="{StaticResource CaptionText}" Text="Preço do kWh (R$)" />
+                                    <ui:NumberBox Width="160" Margin="0,4,0,0" Minimum="0" Maximum="10" SmallChange="0.05" MaxDecimalPlaces="2" Value="{Binding EnergyPrice}" />
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource CaptionText}" Text="Horas de jogo por dia" />
+                                    <ui:NumberBox Width="160" Margin="0,4,0,0" Minimum="0" Maximum="24" SmallChange="0.5" MaxDecimalPlaces="1" Value="{Binding DailyHours}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
