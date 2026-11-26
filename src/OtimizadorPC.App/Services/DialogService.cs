@@ -10,6 +10,9 @@ public interface IDialogService
 {
     Task<bool> ConfirmAsync(string title, string message, string confirmText = "Continuar", string cancelText = "Cancelar");
     Task InfoAsync(string title, string message);
+
+    /// <summary>Duas opções e cancelar. Retorna 1 (primeira), 2 (segunda) ou 0 (cancelado).</summary>
+    Task<int> ChoiceAsync(string title, string message, string first, string second, string cancelText = "Cancelar");
 }
 
 /// <summary>Diálogos no estilo Fluent do WPF-UI.</summary>
@@ -27,6 +30,27 @@ public sealed class DialogService : IDialogService
             MaxWidth = 560,
         };
         return await box.ShowDialogAsync() == WpfUiMessageBoxResult.Primary;
+    }
+
+    public async Task<int> ChoiceAsync(string title, string message, string first, string second, string cancelText = "Cancelar")
+    {
+        var box = new WpfUiMessageBox
+        {
+            Title = title,
+            Content = message,
+            PrimaryButtonText = first,
+            SecondaryButtonText = second,
+            IsSecondaryButtonEnabled = true,
+            CloseButtonText = cancelText,
+            Owner = Application.Current.MainWindow,
+            MaxWidth = 600,
+        };
+        return await box.ShowDialogAsync() switch
+        {
+            WpfUiMessageBoxResult.Primary => 1,
+            WpfUiMessageBoxResult.Secondary => 2,
+            _ => 0,
+        };
     }
 
     public async Task InfoAsync(string title, string message)
