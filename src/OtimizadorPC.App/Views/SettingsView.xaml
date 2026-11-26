@@ -1,0 +1,177 @@
+<UserControl x:Class="OtimizadorPC.App.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:vm="clr-namespace:OtimizadorPC.App.ViewModels"
+             xmlns:c="clr-namespace:OtimizadorPC.App.Controls"
+             xmlns:anim="clr-namespace:OtimizadorPC.App.Controls.Animations"
+             xmlns:conv="clr-namespace:OtimizadorPC.App.Converters"
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance vm:SettingsViewModel}">
+    <UserControl.Resources>
+        <conv:EnumEqualsConverter x:Key="EnumEq" />
+        <conv:HexToBrushConverter x:Key="HexBrush" />
+        <conv:NullToVisibilityConverter x:Key="NullVis" />
+        <conv:BoolToVisibilityConverter x:Key="BoolVis" />
+        <conv:BoolToVisibilityConverter x:Key="InvBoolVis" Invert="True" />
+    </UserControl.Resources>
+
+    <ScrollViewer Padding="{DynamicResource PagePadding}">
+        <StackPanel MaxWidth="980" HorizontalAlignment="Left">
+            <c:PageHeader Title="Personalização" Subtitle="Deixe o OtimizadorPC com a sua cara. As mudanças valem na hora.">
+                <c:PageHeader.Animation><anim:PaletteAnimation /></c:PageHeader.Animation>
+                <c:PageHeader.Actions>
+                    <ui:Button Content="Restaurar padrão" Icon="{ui:SymbolIcon ArrowClockwise24}" Command="{Binding ResetDefaultsCommand}" />
+                </c:PageHeader.Actions>
+            </c:PageHeader>
+
+            <!-- Tema -->
+            <Border Style="{StaticResource SectionCard}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="Tema" />
+                    <TextBlock Style="{StaticResource CaptionText}" Margin="0,0,0,10" Text="Claro, escuro ou acompanhando o Windows." />
+                    <WrapPanel>
+                        <RadioButton Style="{StaticResource SegmentButton}" GroupName="Theme" Content="Sistema" IsChecked="{Binding Theme, Converter={StaticResource EnumEq}, ConverterParameter=Sistema}" />
+                        <RadioButton Style="{StaticResource SegmentButton}" GroupName="Theme" Content="Claro" IsChecked="{Binding Theme, Converter={StaticResource EnumEq}, ConverterParameter=Claro}" />
+                        <RadioButton Style="{StaticResource SegmentButton}" GroupName="Theme" Content="Escuro" IsChecked="{Binding Theme, Converter={StaticResource EnumEq}, ConverterParameter=Escuro}" />
+                    </WrapPanel>
+
+                    <TextBlock Style="{StaticResource SectionTitle}" Margin="0,14,0,4" Text="Fundo da janela" />
+                    <TextBlock Style="{StaticResource CaptionText}" Margin="0,0,0,10" Text="Mica e Acrílico deixam o papel de parede transparecer (Windows 11)." />
+                    <WrapPanel>
+                        <RadioButton Style="{StaticResource SegmentButton}" GroupName="Backdrop" Content="Mica" IsChecked="{Binding Backdrop, Converter={StaticResource EnumEq}, ConverterParameter=Mica}" />
+                        <RadioButton Style="{StaticResource SegmentButton}" GroupName="Backdrop" Content="Acrílico" IsChecked="{Binding Backdrop, Converter={StaticResource EnumEq}, ConverterParameter=Acrilico}" />
+                        <RadioButton Style="{StaticResource SegmentButton}" GroupName="Backdrop" Content="Abas" IsChecked="{Binding Backdrop, Converter={StaticResource EnumEq}, ConverterParameter=Abas}" />
+                        <RadioButton Style="{StaticResource SegmentButton}" GroupName="Backdrop" Content="Sólido" IsChecked="{Binding Backdrop, Converter={StaticResource EnumEq}, ConverterParameter=Nenhum}" />
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Cor de destaque -->
+            <Border Style="{StaticResource SectionCard}">
+                <StackPanel>
+                    <Grid>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="Cor de destaque" />
+                            <TextBlock Style="{StaticResource CaptionText}" Text="Usada em botões, seleção e animações." />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <TextBlock Style="{StaticResource CaptionText}" VerticalAlignment="Center" Margin="0,0,10,0" Text="Usar a cor do Windows" />
+                            <ui:ToggleSwitch IsChecked="{Binding UseSystemAccent}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Margin="0,12,0,0" Visibility="{Binding UseSystemAccent, Converter={StaticResource InvBoolVis}}">
+                        <ItemsControl ItemsSource="{Binding Swatches}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:AccentSwatch}">
+                                    <RadioButton Style="{StaticResource SwatchButton}" GroupName="Accent" ToolTip="{Binding Name}"
+                                                 Background="{Binding Hex, Converter={StaticResource HexBrush}}"
+                                                 Command="{Binding DataContext.SelectAccentCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                 CommandParameter="{Binding Hex}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <Border Width="32" Height="32" CornerRadius="6" Margin="0,0,10,0" BorderThickness="1"
+                                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                                    Background="{Binding AccentColor, Converter={StaticResource HexBrush}}" />
+                            <ui:TextBox Width="140" PlaceholderText="#RRGGBB" Text="{Binding CustomAccent, UpdateSourceTrigger=PropertyChanged}" />
+                            <ui:Button Margin="8,0,0,0" Content="Aplicar cor" Appearance="Primary" Command="{Binding ApplyCustomAccentCommand}" />
+                        </StackPanel>
+                        <TextBlock Margin="0,6,0,0" Foreground="{DynamicResource SystemFillColorCriticalBrush}" Text="{Binding CustomAccentError}"
+                                   Visibility="{Binding CustomAccentError, Converter={StaticResource NullVis}}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Layout -->
+            <Border Style="{StaticResource SectionCard}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="Layout" />
+                    <TextBlock Style="{StaticResource CaptionText}" Margin="0,0,0,10" Text="Posição e tamanho da barra lateral, espaçamento e escala." />
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Style="{StaticResource BodyText}" VerticalAlignment="Center" Margin="0,0,0,6" Text="Barra lateral" />
+                        <WrapPanel Grid.Row="0" Grid.Column="1">
+                            <RadioButton Style="{StaticResource SegmentButton}" GroupName="SidePos" Content="À esquerda" IsChecked="{Binding SidebarPosition, Converter={StaticResource EnumEq}, ConverterParameter=Esquerda}" />
+                            <RadioButton Style="{StaticResource SegmentButton}" GroupName="SidePos" Content="À direita" IsChecked="{Binding SidebarPosition, Converter={StaticResource EnumEq}, ConverterParameter=Direita}" />
+                        </WrapPanel>
+
+                        <TextBlock Grid.Row="1" Style="{StaticResource BodyText}" VerticalAlignment="Center" Margin="0,0,0,6" Text="Modo da barra" />
+                        <WrapPanel Grid.Row="1" Grid.Column="1">
+                            <RadioButton Style="{StaticResource SegmentButton}" GroupName="SideMode" Content="Expandida (ícone e nome)" IsChecked="{Binding SidebarMode, Converter={StaticResource EnumEq}, ConverterParameter=Expandida}" />
+                            <RadioButton Style="{StaticResource SegmentButton}" GroupName="SideMode" Content="Compacta (só ícones)" IsChecked="{Binding SidebarMode, Converter={StaticResource EnumEq}, ConverterParameter=Compacta}" />
+                        </WrapPanel>
+
+                        <TextBlock Grid.Row="2" Style="{StaticResource BodyText}" VerticalAlignment="Center" Margin="0,0,0,6" Text="Densidade" />
+                        <WrapPanel Grid.Row="2" Grid.Column="1">
+                            <RadioButton Style="{StaticResource SegmentButton}" GroupName="Density" Content="Confortável" IsChecked="{Binding Density, Converter={StaticResource EnumEq}, ConverterParameter=Confortavel}" />
+                            <RadioButton Style="{StaticResource SegmentButton}" GroupName="Density" Content="Compacta" IsChecked="{Binding Density, Converter={StaticResource EnumEq}, ConverterParameter=Compacta}" />
+                        </WrapPanel>
+
+                        <TextBlock Grid.Row="3" Style="{StaticResource BodyText}" VerticalAlignment="Center" Text="Escala da interface" />
+                        <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal">
+                            <Slider Width="260" Minimum="0.85" Maximum="1.4" TickFrequency="0.05" IsSnapToTickEnabled="True" Value="{Binding UiScale, Delay=250}" />
+                            <TextBlock Margin="12,0,0,0" VerticalAlignment="Center" Style="{StaticResource BodyText}" Text="{Binding UiScale, StringFormat={}{0:P0}}" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Animações -->
+            <Border Style="{StaticResource SectionCard}">
+                <StackPanel>
+                    <Grid>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="Animações" />
+                            <TextBlock Style="{StaticResource CaptionText}" Text="Animações dos cabeçalhos e transição entre páginas." />
+                        </StackPanel>
+                        <ui:ToggleSwitch HorizontalAlignment="Right" VerticalAlignment="Center" IsChecked="{Binding AnimationsEnabled}" />
+                    </Grid>
+
+                    <Grid Margin="0,12,0,0" IsEnabled="{Binding AnimationsEnabled}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Style="{StaticResource BodyText}" VerticalAlignment="Center" Margin="0,0,0,6" Text="Transição de página" />
+                        <WrapPanel Grid.Column="1">
+                            <RadioButton Style="{StaticResource SegmentButton}" GroupName="Trans" Content="Deslizar" IsChecked="{Binding Transition, Converter={StaticResource EnumEq}, ConverterParameter=Deslizar}" />
+                            <RadioButton Style="{StaticResource SegmentButton}" GroupName="Trans" Content="Esmaecer" IsChecked="{Binding Transition, Converter={StaticResource EnumEq}, ConverterParameter=Esmaecer}" />
+                            <RadioButton Style="{StaticResource SegmentButton}" GroupName="Trans" Content="Zoom" IsChecked="{Binding Transition, Converter={StaticResource EnumEq}, ConverterParameter=Zoom}" />
+                            <RadioButton Style="{StaticResource SegmentButton}" GroupName="Trans" Content="Nenhuma" IsChecked="{Binding Transition, Converter={StaticResource EnumEq}, ConverterParameter=Nenhuma}" />
+                        </WrapPanel>
+
+                        <TextBlock Grid.Row="1" Style="{StaticResource BodyText}" VerticalAlignment="Center" Text="Velocidade" />
+                        <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
+                            <Slider Width="260" Minimum="0.5" Maximum="2" TickFrequency="0.25" IsSnapToTickEnabled="True" Value="{Binding AnimationSpeed, Delay=250}" />
+                            <TextBlock Margin="12,0,0,0" VerticalAlignment="Center" Style="{StaticResource BodyText}" Text="{Binding AnimationSpeed, StringFormat={}{0:0.##}x}" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
