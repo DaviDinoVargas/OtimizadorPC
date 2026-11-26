@@ -29,14 +29,7 @@
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type vm:OptimizationViewModel}">
-        <ScrollViewer Padding="{DynamicResource PagePadding}">
-            <StackPanel>
-                <c:PageHeader Title="Otimização" Subtitle="Inicialização, serviços, energia e ajustes do Windows">
-                    <c:PageHeader.Animation><anim:GaugeAnimation /></c:PageHeader.Animation>
-                </c:PageHeader>
-                <ContentControl ContentTemplate="{StaticResource ComingSoon}" />
-            </StackPanel>
-        </ScrollViewer>
+        <views:OptimizationView />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type vm:ProcessesViewModel}">

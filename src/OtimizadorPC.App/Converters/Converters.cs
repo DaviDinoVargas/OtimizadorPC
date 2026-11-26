@@ -189,3 +189,38 @@ public sealed class RiskToBrushConverter : IValueConverter
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         => throw new NotSupportedException();
 }
+
+/// <summary>Texto amigável do modo de início de um serviço.</summary>
+public sealed class ServiceModeTextConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is Core.Optimization.ServiceStartMode m ? ViewModels.QuickTab.ModeText(m) : string.Empty;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+/// <summary>Verde para sucesso, vermelho para falha, neutro quando ainda não executado.</summary>
+public sealed class SuccessToBrushConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        var key = value switch
+        {
+            true => "SystemFillColorSuccessBrush",
+            false => "SystemFillColorCriticalBrush",
+            _ => "TextFillColorSecondaryBrush"
+        };
+        return Application.Current.TryFindResource(key) as Brush ?? Brushes.Gray;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+public sealed class InverseBoolConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value is not true;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => value is not true;
+}
