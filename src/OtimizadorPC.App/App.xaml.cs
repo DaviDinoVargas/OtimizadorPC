@@ -63,6 +63,7 @@ public partial class App : Application
         services.AddSingleton<IPageFileService, PageFileService>();
         services.AddSingleton<IAppxService, AppxService>();
         services.AddSingleton<IRestorePointService, RestorePointService>();
+        services.AddSingleton<IProcessService, OtimizadorPC.Infrastructure.Processes.ProcessService>();
 
         // Serviços da interface
         services.AddSingleton<ThemeService>();

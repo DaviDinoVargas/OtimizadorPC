@@ -224,3 +224,22 @@ public sealed class InverseBoolConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => value is not true;
 }
+
+/// <summary>Cor da etiqueta de categoria de processo.</summary>
+public sealed class CategoryToBrushConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        var key = value?.ToString() switch
+        {
+            "Sistema" => "TextFillColorTertiaryBrush",
+            "Aplicativo" => "AccentTextFillColorPrimaryBrush",
+            "Dispensavel" => "SystemFillColorCautionBrush",
+            _ => "TextFillColorSecondaryBrush"
+        };
+        return Application.Current.TryFindResource(key) as Brush ?? Brushes.Gray;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
