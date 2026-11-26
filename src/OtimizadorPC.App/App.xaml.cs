@@ -9,6 +9,7 @@ using OtimizadorPC.Core.Abstractions;
 using OtimizadorPC.Infrastructure.Cleanup;
 using OtimizadorPC.Infrastructure.Hardware;
 using OtimizadorPC.Infrastructure.Optimization;
+using OtimizadorPC.Infrastructure.Overclock;
 using OtimizadorPC.Infrastructure.Settings;
 using Serilog;
 
@@ -66,6 +67,11 @@ public partial class App : Application
         services.AddSingleton<IProcessService, OtimizadorPC.Infrastructure.Processes.ProcessService>();
         services.AddSingleton<IDiskScanner, OtimizadorPC.Infrastructure.DiskAnalysis.DiskScanner>();
         services.AddSingleton<IFileOperations, OtimizadorPC.Infrastructure.DiskAnalysis.FileOperations>();
+        services.AddSingleton<IBenchmarkService, BenchmarkService>();
+        services.AddSingleton<IBenchmarkHistory, BenchmarkHistory>();
+        services.AddSingleton<ICpuStress, CpuStress>();
+        services.AddSingleton<IGpuTuner, NvidiaGpuTuner>();
+        services.AddSingleton<ICpuPowerTuner, CpuPowerTuner>();
 
         // Serviços da interface
         services.AddSingleton<ThemeService>();

@@ -243,3 +243,21 @@ public sealed class CategoryToBrushConverter : IValueConverter
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         => throw new NotSupportedException();
 }
+
+/// <summary>Cor do selo de capacidade de overclock.</summary>
+public sealed class SupportToBrushConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        var key = value?.ToString() switch
+        {
+            "PeloApp" => "SystemFillColorSuccessBrush",
+            "PelaBios" => "SystemFillColorCautionBrush",
+            _ => "TextFillColorTertiaryBrush"
+        };
+        return Application.Current.TryFindResource(key) as Brush ?? Brushes.Gray;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
