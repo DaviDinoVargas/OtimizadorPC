@@ -17,25 +17,11 @@
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
-        <ScrollViewer Padding="{DynamicResource PagePadding}">
-            <StackPanel>
-                <c:PageHeader Title="Início" Subtitle="Visão geral do desempenho do computador">
-                    <c:PageHeader.Animation><anim:RadarAnimation /></c:PageHeader.Animation>
-                </c:PageHeader>
-                <ContentControl ContentTemplate="{StaticResource ComingSoon}" />
-            </StackPanel>
-        </ScrollViewer>
+        <views:DashboardView />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type vm:MachineInfoViewModel}">
-        <ScrollViewer Padding="{DynamicResource PagePadding}">
-            <StackPanel>
-                <c:PageHeader Title="Informações" Subtitle="Processador, placa-mãe, memória, vídeo, discos e sensores">
-                    <c:PageHeader.Animation><anim:ChipAnimation /></c:PageHeader.Animation>
-                </c:PageHeader>
-                <ContentControl ContentTemplate="{StaticResource ComingSoon}" />
-            </StackPanel>
-        </ScrollViewer>
+        <views:MachineInfoView />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type vm:CleanupViewModel}">
