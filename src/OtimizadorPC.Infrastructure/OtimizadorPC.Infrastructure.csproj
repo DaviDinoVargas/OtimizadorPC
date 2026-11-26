@@ -15,6 +15,7 @@
     <PackageReference Include="System.Management" Version="11.0.0" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="11.0.0" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="11.0.0" />
+    <PackageReference Include="TaskScheduler" Version="2.12.2" />
   </ItemGroup>
 
 </Project>
