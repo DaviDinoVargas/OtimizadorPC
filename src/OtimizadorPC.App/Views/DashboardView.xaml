@@ -1,0 +1,234 @@
+<UserControl x:Class="OtimizadorPC.App.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:vm="clr-namespace:OtimizadorPC.App.ViewModels"
+             xmlns:c="clr-namespace:OtimizadorPC.App.Controls"
+             xmlns:anim="clr-namespace:OtimizadorPC.App.Controls.Animations"
+             xmlns:conv="clr-namespace:OtimizadorPC.App.Converters"
+             xmlns:hw="clr-namespace:OtimizadorPC.Core.Hardware;assembly=OtimizadorPC.Core"
+             xmlns:dg="clr-namespace:OtimizadorPC.Core.Diagnostics;assembly=OtimizadorPC.Core"
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance vm:DashboardViewModel}">
+    <UserControl.Resources>
+        <conv:WidthToColumnsConverter x:Key="Cols" />
+        <conv:BytesConverter x:Key="Bytes" />
+        <conv:LevelToBrushConverter x:Key="LevelBrush" />
+        <conv:SeverityToBrushConverter x:Key="SevBrush" />
+        <conv:SeverityToSymbolConverter x:Key="SevSymbol" />
+        <conv:BoolToVisibilityConverter x:Key="BoolVis" />
+        <conv:BoolToVisibilityConverter x:Key="InvBoolVis" Invert="True" />
+        <conv:NullToVisibilityConverter x:Key="NullVis" />
+
+        <!-- Cartão de métrica com anel e mini gráfico -->
+        <Style x:Key="MetricCard" TargetType="Border" BasedOn="{StaticResource HoverCard}">
+            <Setter Property="Margin" Value="0,0,12,12" />
+            <Setter Property="Padding" Value="16,14,16,0" />
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer Padding="{DynamicResource PagePadding}">
+        <StackPanel x:Name="Root">
+            <c:PageHeader Title="Início" Subtitle="Visão geral do desempenho do computador em tempo real">
+                <c:PageHeader.Animation><anim:RadarAnimation /></c:PageHeader.Animation>
+                <c:PageHeader.Actions>
+                    <ui:Button Content="Atualizar" Icon="{ui:SymbolIcon ArrowClockwise24}" Command="{Binding RefreshCommand}" />
+                </c:PageHeader.Actions>
+            </c:PageHeader>
+
+            <ui:InfoBar Title="Temperaturas indisponíveis" IsOpen="{Binding SensorDriverMissing}" IsClosable="True" Severity="Informational" Margin="0,0,12,12"
+                        Message="Para ler temperatura e consumo do processador, execute o OtimizadorPC como administrador com o driver de sensores (PawnIO) instalado pelo instalador." />
+
+            <!-- Métricas ao vivo -->
+            <UniformGrid Columns="{Binding ActualWidth, ElementName=Root, Converter={StaticResource Cols}}">
+                <!-- CPU -->
+                <Border Style="{StaticResource MetricCard}">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="56" /></Grid.RowDefinitions>
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="DeveloperBoard24" FontSize="18" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                            <TextBlock Margin="8,0,0,0" Style="{StaticResource SectionTitle}" Text="Processador" />
+                        </StackPanel>
+                        <Grid Grid.Row="1" Margin="0,8,0,4">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource BigNumber}" Text="{Binding CpuLoad, StringFormat={}{0:0}%}" />
+                                <TextBlock Style="{StaticResource CaptionText}" Text="{Binding CpuDetail}" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                            <c:RingGauge Width="54" Height="54" HorizontalAlignment="Right" Thickness="6" Value="{Binding CpuLoad}"
+                                         TrackBrush="{DynamicResource ControlStrokeColorDefaultBrush}" FillBrush="{DynamicResource AccentFillColorDefaultBrush}" />
+                        </Grid>
+                        <c:Sparkline Grid.Row="2" Margin="-16,0,-16,0" Values="{Binding CpuHistory}" Stroke="{DynamicResource AccentFillColorDefaultBrush}" />
+                    </Grid>
+                </Border>
+
+                <!-- RAM -->
+                <Border Style="{StaticResource MetricCard}">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="56" /></Grid.RowDefinitions>
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Ram20" FontSize="18" Foreground="#8B5CF6" />
+                            <TextBlock Margin="8,0,0,0" Style="{StaticResource SectionTitle}" Text="Memória" />
+                        </StackPanel>
+                        <Grid Grid.Row="1" Margin="0,8,0,4">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource BigNumber}" Text="{Binding RamPercent, StringFormat={}{0:0}%}" />
+                                <TextBlock Style="{StaticResource CaptionText}" Text="{Binding RamDetail}" />
+                            </StackPanel>
+                            <c:RingGauge Width="54" Height="54" HorizontalAlignment="Right" Thickness="6" Value="{Binding RamPercent}"
+                                         TrackBrush="{DynamicResource ControlStrokeColorDefaultBrush}" FillBrush="#8B5CF6" />
+                        </Grid>
+                        <c:Sparkline Grid.Row="2" Margin="-16,0,-16,0" Values="{Binding RamHistory}" Stroke="#8B5CF6" />
+                    </Grid>
+                </Border>
+
+                <!-- GPU -->
+                <Border Style="{StaticResource MetricCard}">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="56" /></Grid.RowDefinitions>
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Games24" FontSize="18" Foreground="#F59E0B" />
+                            <TextBlock Margin="8,0,0,0" Style="{StaticResource SectionTitle}" Text="Placa de vídeo" />
+                        </StackPanel>
+                        <Grid Grid.Row="1" Margin="0,8,0,4">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource BigNumber}" Text="{Binding GpuLoad, StringFormat={}{0:0}%}" />
+                                <TextBlock Style="{StaticResource CaptionText}" Text="{Binding GpuDetail}" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                            <c:RingGauge Width="54" Height="54" HorizontalAlignment="Right" Thickness="6" Value="{Binding GpuLoad}"
+                                         TrackBrush="{DynamicResource ControlStrokeColorDefaultBrush}" FillBrush="#F59E0B" />
+                        </Grid>
+                        <c:Sparkline Grid.Row="2" Margin="-16,0,-16,0" Values="{Binding GpuHistory}" Stroke="#F59E0B" />
+                    </Grid>
+                </Border>
+
+                <!-- Disco do sistema -->
+                <Border Style="{StaticResource MetricCard}" Padding="16,14,16,14">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Storage24" FontSize="18" Foreground="#0EA5E9" />
+                            <TextBlock Margin="8,0,0,0" Style="{StaticResource SectionTitle}" Text="Disco do sistema" />
+                        </StackPanel>
+                        <Grid Grid.Row="1" Margin="0,8,0,4">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource BigNumber}" Text="{Binding SystemDiskUsed, StringFormat={}{0:0}%}" />
+                                <TextBlock Style="{StaticResource CaptionText}" Text="{Binding SystemDiskDetail}" />
+                            </StackPanel>
+                            <c:RingGauge Width="54" Height="54" HorizontalAlignment="Right" Thickness="6" Value="{Binding SystemDiskUsed}"
+                                         TrackBrush="{DynamicResource ControlStrokeColorDefaultBrush}" FillBrush="{Binding SystemDiskUsed, Converter={StaticResource LevelBrush}}" />
+                        </Grid>
+                        <ui:Button Grid.Row="2" Margin="0,10,0,0" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Content="Liberar espaço"
+                                   Icon="{ui:SymbolIcon Broom24}" Command="{Binding OpenCommand}" CommandParameter="limpeza" />
+                    </Grid>
+                </Border>
+            </UniformGrid>
+
+            <!-- Recomendações -->
+            <Border Style="{StaticResource SectionCard}" Margin="0,0,12,12">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="Recomendações" />
+                    <TextBlock Style="{StaticResource CaptionText}" Margin="0,0,0,8" Text="Diagnóstico automático do seu computador." />
+                    <ui:ProgressRing IsIndeterminate="True" Width="28" Height="28" HorizontalAlignment="Left" Visibility="{Binding IsBusy, Converter={StaticResource BoolVis}}" />
+                    <TextBlock Style="{StaticResource BodyText}" Text="Tudo certo por aqui. Nenhum problema encontrado."
+                               Visibility="{Binding HasRecommendations, Converter={StaticResource InvBoolVis}}" />
+                    <ItemsControl ItemsSource="{Binding Recommendations}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type dg:Recommendation}">
+                                <Border Margin="0,6,0,0" Padding="12,10" CornerRadius="8" Background="{DynamicResource ControlFillColorDefaultBrush}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <ui:SymbolIcon Symbol="{Binding Severity, Converter={StaticResource SevSymbol}}" FontSize="22" VerticalAlignment="Top"
+                                                       Foreground="{Binding Severity, Converter={StaticResource SevBrush}}" />
+                                        <StackPanel Grid.Column="1" Margin="12,0">
+                                            <TextBlock FontWeight="SemiBold" Style="{StaticResource BodyText}" Text="{Binding Title}" />
+                                            <TextBlock Style="{StaticResource CaptionText}" Text="{Binding Detail}" />
+                                        </StackPanel>
+                                        <ui:Button Grid.Column="2" VerticalAlignment="Center" Content="Resolver" Appearance="Secondary"
+                                                   Visibility="{Binding TargetModule, Converter={StaticResource NullVis}}"
+                                                   Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                   CommandParameter="{Binding TargetModule}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Discos -->
+                <Border Grid.Column="0" Style="{StaticResource SectionCard}" Margin="0,0,12,12">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="Discos" />
+                        <ItemsControl ItemsSource="{Binding Volumes}" Margin="0,6,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type hw:VolumeInfo}">
+                                    <StackPanel Margin="0,6">
+                                        <Grid>
+                                            <TextBlock Style="{StaticResource BodyText}">
+                                                <Run FontWeight="SemiBold" Text="{Binding Letter, Mode=OneWay, StringFormat={}{0}:}" />
+                                                <Run Text="{Binding Label, Mode=OneWay}" />
+                                                <Run Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="{Binding Media, Mode=OneWay}" />
+                                            </TextBlock>
+                                            <TextBlock HorizontalAlignment="Right" Style="{StaticResource CaptionText}">
+                                                <Run Text="{Binding FreeBytes, Mode=OneWay, Converter={StaticResource Bytes}}" />
+                                                <Run Text="livres de" />
+                                                <Run Text="{Binding TotalBytes, Mode=OneWay, Converter={StaticResource Bytes}}" />
+                                            </TextBlock>
+                                        </Grid>
+                                        <ProgressBar Margin="0,6,0,0" Style="{StaticResource ThinProgress}" Maximum="1" Value="{Binding UsedFraction, Mode=OneWay}"
+                                                     Foreground="{Binding UsedFraction, Converter={StaticResource LevelBrush}}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Sistema -->
+                <Border Grid.Column="1" Style="{StaticResource SectionCard}" Margin="0,0,12,12">
+                    <StackPanel>
+                        <Grid>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="Sistema" />
+                            <ui:HyperlinkButton HorizontalAlignment="Right" Padding="4,0" Content="Ver detalhes" Command="{Binding OpenCommand}" CommandParameter="info" />
+                        </Grid>
+                        <Grid Margin="0,6,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="110" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.Resources>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource BodyText}">
+                                    <Setter Property="Margin" Value="0,4" />
+                                </Style>
+                            </Grid.Resources>
+                            <TextBlock Grid.Row="0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="Windows" />
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding OsText}" />
+                            <TextBlock Grid.Row="1" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="Processador" />
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding CpuName}" />
+                            <TextBlock Grid.Row="2" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="Vídeo" />
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding GpuName}" />
+                            <TextBlock Grid.Row="3" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="Memória" />
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding RamText}" />
+                            <TextBlock Grid.Row="4" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="Placa-mãe" />
+                            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding BoardText}" />
+                            <TextBlock Grid.Row="5" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="Ligado há" />
+                            <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding UptimeText}" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,111 @@
+<UserControl x:Class="OtimizadorPC.App.Views.MachineInfoView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:vm="clr-namespace:OtimizadorPC.App.ViewModels"
+             xmlns:c="clr-namespace:OtimizadorPC.App.Controls"
+             xmlns:anim="clr-namespace:OtimizadorPC.App.Controls.Animations"
+             xmlns:conv="clr-namespace:OtimizadorPC.App.Converters"
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance vm:MachineInfoViewModel}">
+    <UserControl.Resources>
+        <conv:BoolToVisibilityConverter x:Key="BoolVis" />
+        <conv:NullToVisibilityConverter x:Key="NullVis" />
+        <conv:ColumnItemWidthConverter x:Key="ItemWidth" WideThreshold="1100" Gap="12" />
+    </UserControl.Resources>
+
+    <ScrollViewer Padding="{DynamicResource PagePadding}">
+        <StackPanel x:Name="Root">
+            <c:PageHeader Title="Informações" Subtitle="Processador, placa-mãe, memória, vídeo, discos e sensores">
+                <c:PageHeader.Animation><anim:ChipAnimation /></c:PageHeader.Animation>
+                <c:PageHeader.Actions>
+                    <StackPanel Orientation="Horizontal">
+                        <ui:Button Margin="0,0,8,0" Content="Copiar relatório" Icon="{ui:SymbolIcon Copy24}" Command="{Binding CopyReportCommand}" />
+                        <ui:Button Margin="0,0,8,0" Content="Salvar" Icon="{ui:SymbolIcon Save24}" Command="{Binding ExportReportCommand}" />
+                        <ui:Button Content="Atualizar" Icon="{ui:SymbolIcon ArrowClockwise24}" Command="{Binding RefreshCommand}" />
+                    </StackPanel>
+                </c:PageHeader.Actions>
+            </c:PageHeader>
+
+            <ui:InfoBar Title="Pronto" Message="{Binding StatusMessage}" IsOpen="True" Severity="Success" Margin="0,0,12,12" IsClosable="False"
+                        Visibility="{Binding StatusMessage, Converter={StaticResource NullVis}}" />
+            <ui:ProgressRing IsIndeterminate="True" HorizontalAlignment="Left" Visibility="{Binding IsBusy, Converter={StaticResource BoolVis}}" />
+
+            <!-- Seções do hardware (duas colunas em telas largas) -->
+            <ItemsControl ItemsSource="{Binding Sections}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:InfoSection}">
+                        <Border Style="{StaticResource HoverCard}" Margin="0,0,12,12" VerticalAlignment="Top"
+                                Width="{Binding ActualWidth, ElementName=Root, Converter={StaticResource ItemWidth}}">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <ui:SymbolIcon Symbol="{Binding Icon}" FontSize="20" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                                    <TextBlock Margin="10,0,0,0" Style="{StaticResource SectionTitle}" Text="{Binding Title}" />
+                                </StackPanel>
+                                <ItemsControl ItemsSource="{Binding Rows}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type vm:InfoRow}">
+                                            <Grid Margin="0,3">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="150" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Style="{StaticResource CaptionText}" FontSize="13" Text="{Binding Label}" />
+                                                <TextBlock Grid.Column="1" Style="{StaticResource BodyText}" FontSize="13" Text="{Binding Value}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- Sensores ao vivo -->
+            <Border Style="{StaticResource SectionCard}" Margin="0,0,12,12">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                        <ui:SymbolIcon Symbol="Temperature24" FontSize="20" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                        <TextBlock Margin="10,0,0,0" Style="{StaticResource SectionTitle}" Text="Sensores ao vivo" />
+                    </StackPanel>
+                    <TextBlock Style="{StaticResource CaptionText}" Margin="0,0,0,8"
+                               Text="Atualizado a cada 2 segundos. Temperaturas e consumo do processador exigem administrador e o driver de sensores." />
+
+                    <ItemsControl ItemsSource="{Binding SensorGroups}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:SensorGroup}">
+                                <ui:CardExpander Margin="0,0,0,6" Header="{Binding Hardware}" IsExpanded="True">
+                                    <ItemsControl ItemsSource="{Binding Rows}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="{x:Type vm:SensorRow}">
+                                                <Grid Margin="0,2">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="110" />
+                                                        <ColumnDefinition Width="110" />
+                                                        <ColumnDefinition Width="110" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Style="{StaticResource BodyText}" FontSize="13" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Grid.Column="1" Style="{StaticResource BodyText}" FontSize="13" FontWeight="SemiBold" Text="{Binding Value}" />
+                                                    <TextBlock Grid.Column="2" Style="{StaticResource CaptionText}" Text="{Binding Min, StringFormat=mín {0}}" />
+                                                    <TextBlock Grid.Column="3" Style="{StaticResource CaptionText}" Text="{Binding Max, StringFormat=máx {0}}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ui:CardExpander>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
