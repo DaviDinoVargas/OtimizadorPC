@@ -17,6 +17,8 @@ public class AnimatedIcon : UserControl
     {
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
+        // Animações que aparecem/somem (ex.: "concluído") recomeçam sempre que ficam visíveis
+        IsVisibleChanged += (_, e) => { if (e.NewValue is true && IsLoaded) Restart(); };
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)

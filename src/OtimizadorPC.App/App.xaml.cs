@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using OtimizadorPC.App.Services;
 using OtimizadorPC.App.ViewModels;
 using OtimizadorPC.Core.Abstractions;
+using OtimizadorPC.Infrastructure.Cleanup;
 using OtimizadorPC.Infrastructure.Hardware;
 using OtimizadorPC.Infrastructure.Settings;
 using Serilog;
@@ -51,6 +52,8 @@ public partial class App : Application
         services.AddSingleton<ISettingsService, JsonSettingsService>();
         services.AddSingleton<IHardwareInfoService, WmiHardwareInfoService>();
         services.AddSingleton<ISensorService, LhmSensorService>();
+        services.AddSingleton<ICleanupService, CleanupService>();
+        services.AddSingleton<IDialogService, DialogService>();
 
         // Serviços da interface
         services.AddSingleton<ThemeService>();

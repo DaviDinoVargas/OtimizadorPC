@@ -17,3 +17,5 @@ public partial class TilesAnimation : AnimatedIcon { public TilesAnimation() => 
 public partial class PaperPlaneAnimation : AnimatedIcon { public PaperPlaneAnimation() => InitializeComponent(); }
 
 public partial class PaletteAnimation : AnimatedIcon { public PaletteAnimation() => InitializeComponent(); }
+
+public partial class SuccessAnimation : AnimatedIcon { public SuccessAnimation() => InitializeComponent(); }

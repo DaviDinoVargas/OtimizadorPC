@@ -1,0 +1,165 @@
+<UserControl x:Class="OtimizadorPC.App.Views.CleanupView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:vm="clr-namespace:OtimizadorPC.App.ViewModels"
+             xmlns:c="clr-namespace:OtimizadorPC.App.Controls"
+             xmlns:anim="clr-namespace:OtimizadorPC.App.Controls.Animations"
+             xmlns:conv="clr-namespace:OtimizadorPC.App.Converters"
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance vm:CleanupViewModel}">
+    <UserControl.Resources>
+        <conv:BoolToVisibilityConverter x:Key="BoolVis" />
+        <conv:BoolToVisibilityConverter x:Key="InvBoolVis" Invert="True" />
+        <conv:NullToVisibilityConverter x:Key="NullVis" />
+        <conv:EnumToVisibilityConverter x:Key="EnumVis" />
+        <conv:RiskToBrushConverter x:Key="RiskBrush" />
+        <conv:BytesConverter x:Key="BytesFormat" />
+    </UserControl.Resources>
+
+    <ScrollViewer Padding="{DynamicResource PagePadding}">
+        <StackPanel>
+            <c:PageHeader Title="Limpeza" Subtitle="Remova arquivos temporários, caches e restos de programas com segurança">
+                <c:PageHeader.Animation><anim:BroomAnimation /></c:PageHeader.Animation>
+                <c:PageHeader.Actions>
+                    <ui:Button Content="Analisar de novo" Icon="{ui:SymbolIcon ArrowClockwise24}" Command="{Binding ScanCommand}" IsEnabled="{Binding IsIdle}" />
+                </c:PageHeader.Actions>
+            </c:PageHeader>
+
+            <ui:InfoBar Title="Algumas categorias precisam de administrador" IsOpen="{Binding ShowAdminHint}" IsClosable="True" Severity="Warning" Margin="0,0,0,12"
+                        Message="Arquivos do Windows (Temp do sistema, Windows Update, WinSxS) só podem ser limpos com permissão de administrador.">
+            </ui:InfoBar>
+            <ui:Button Margin="0,-6,0,12" Content="Reabrir como administrador" Icon="{ui:SymbolIcon ShieldCheckmark24}"
+                       Command="{Binding RestartAsAdminCommand}" Visibility="{Binding ShowAdminHint, Converter={StaticResource BoolVis}}" />
+
+            <!-- Resumo e ações -->
+            <Border Style="{StaticResource SectionCard}">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Style="{StaticResource CaptionText}" Text="Espaço que será liberado" />
+                            <c:CountUpText Style="{StaticResource BigNumber}" FontSize="36" Value="{Binding TotalSelectedBytes}" />
+                            <TextBlock Style="{StaticResource CaptionText}" Text="{Binding SelectedCount, StringFormat={}{0} categorias selecionadas}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <ui:Button Margin="0,0,8,0" Content="Recomendados" Command="{Binding SelectRecommendedCommand}" IsEnabled="{Binding IsIdle}" />
+                            <ui:Button Margin="0,0,8,0" Content="Todos seguros" Command="{Binding SelectAllCommand}" IsEnabled="{Binding IsIdle}" />
+                            <ui:Button Margin="0,0,12,0" Content="Nenhum" Command="{Binding SelectNoneCommand}" IsEnabled="{Binding IsIdle}" />
+                            <ui:Button Appearance="Primary" Padding="22,10" Content="Limpar" Icon="{ui:SymbolIcon Broom24}"
+                                       Command="{Binding CleanCommand}" IsEnabled="{Binding IsIdle}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Progresso -->
+                    <Grid Margin="0,14,0,0" Visibility="{Binding IsIdle, Converter={StaticResource InvBoolVis}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource CaptionText}" Margin="0,0,0,6" Text="{Binding PhaseText}" />
+                            <ProgressBar Style="{StaticResource ThinProgress}" Maximum="100" Value="{Binding OverallProgress}" />
+                        </StackPanel>
+                        <ui:Button Grid.Column="1" Margin="12,0,0,0" Content="Cancelar" Command="{Binding CancelCommand}" />
+                    </Grid>
+
+                    <!-- Resultado -->
+                    <Border Margin="0,14,0,0" Padding="14" CornerRadius="8" Background="{DynamicResource ControlFillColorDefaultBrush}"
+                            Visibility="{Binding ShowResult, Converter={StaticResource BoolVis}}">
+                        <StackPanel Orientation="Horizontal">
+                            <anim:SuccessAnimation />
+                            <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Style="{StaticResource SectionTitle}">
+                                    <Run Text="Limpeza concluída:" />
+                                    <Run Text="{Binding LastFreedBytes, Mode=OneWay, Converter={StaticResource BytesFormat}}" />
+                                    <Run Text="liberados" />
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource CaptionText}" Text="{Binding ResultText}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Categorias por grupo -->
+            <ItemsControl ItemsSource="{Binding Groups}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:CleanupGroupViewModel}">
+                        <StackPanel Margin="0,8,0,4">
+                            <StackPanel Orientation="Horizontal" Margin="2,0,0,8">
+                                <ui:SymbolIcon Symbol="{Binding Icon}" FontSize="18" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                                <TextBlock Margin="8,0,0,0" Style="{StaticResource SectionTitle}" Text="{Binding Title}" />
+                            </StackPanel>
+                            <ItemsControl ItemsSource="{Binding Items}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type vm:CleanupItemViewModel}">
+                                        <Border Style="{StaticResource SectionCard}" Margin="0,0,0,6" Padding="14,10">
+                                            <StackPanel>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="120" />
+                                                        <ColumnDefinition Width="32" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <CheckBox VerticalAlignment="Center" IsChecked="{Binding IsSelected}" IsEnabled="{Binding CanRun}"
+                                                              AutomationProperties.Name="{Binding Category.Name}" />
+                                                    <StackPanel Grid.Column="1" Margin="4,0,12,0">
+                                                        <TextBlock Style="{StaticResource BodyText}" FontWeight="SemiBold" Text="{Binding Category.Name}" />
+                                                        <TextBlock Style="{StaticResource CaptionText}" Text="{Binding Category.Description}" />
+                                                        <TextBlock Style="{StaticResource CaptionText}" Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                                                                   Text="{Binding AdminHint}" Visibility="{Binding AdminHint, Converter={StaticResource NullVis}}" />
+                                                        <TextBlock Style="{StaticResource CaptionText}" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
+                                                                   Text="{Binding Message}" Visibility="{Binding Message, Converter={StaticResource NullVis}}" />
+                                                    </StackPanel>
+                                                    <Border Grid.Column="2" VerticalAlignment="Center" CornerRadius="10" Padding="8,2" Margin="0,0,12,0"
+                                                            BorderThickness="1" BorderBrush="{Binding Category.Risk, Converter={StaticResource RiskBrush}}">
+                                                        <TextBlock FontSize="11" Foreground="{Binding Category.Risk, Converter={StaticResource RiskBrush}}" Text="{Binding RiskText}" />
+                                                    </Border>
+                                                    <TextBlock Grid.Column="3" VerticalAlignment="Center" HorizontalAlignment="Right" FontSize="15" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding SizeText}" />
+                                                    <Grid Grid.Column="4" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                        <ui:ProgressRing Width="18" Height="18" IsIndeterminate="True"
+                                                                         Visibility="{Binding State, Converter={StaticResource EnumVis}, ConverterParameter=Analisando|Limpando}" />
+                                                        <ui:SymbolIcon Symbol="CheckmarkCircle24" FontSize="20" Foreground="{DynamicResource SystemFillColorSuccessBrush}"
+                                                                       Visibility="{Binding State, Converter={StaticResource EnumVis}, ConverterParameter=Concluido}" />
+                                                        <ui:SymbolIcon Symbol="ErrorCircle24" FontSize="20" Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                                                       Visibility="{Binding State, Converter={StaticResource EnumVis}, ConverterParameter=Erro}" />
+                                                    </Grid>
+                                                </Grid>
+
+                                                <!-- Itens individuais (ex.: jogos órfãos) -->
+                                                <ItemsControl Margin="30,8,0,0" ItemsSource="{Binding Entries}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate DataType="{x:Type vm:CleanupEntryViewModel}">
+                                                            <Grid Margin="0,2">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <CheckBox IsChecked="{Binding IsSelected}" ToolTip="{Binding Entry.Path}">
+                                                                    <TextBlock Style="{StaticResource BodyText}" Text="{Binding Entry.Name}" />
+                                                                </CheckBox>
+                                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource CaptionText}" Text="{Binding SizeText}" />
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

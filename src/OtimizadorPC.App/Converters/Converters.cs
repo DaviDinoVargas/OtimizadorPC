@@ -158,3 +158,34 @@ public sealed class ColumnItemWidthConverter : IValueConverter
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         => throw new NotSupportedException();
 }
+
+/// <summary>Visível quando o valor (enum) está na lista do parâmetro, separada por "|".</summary>
+public sealed class EnumToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        var options = (parameter?.ToString() ?? string.Empty).Split('|', StringSplitOptions.RemoveEmptyEntries);
+        return options.Contains(value?.ToString()) ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+/// <summary>Cor do selo de risco da limpeza.</summary>
+public sealed class RiskToBrushConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        var key = value?.ToString() switch
+        {
+            "Seguro" => "SystemFillColorSuccessBrush",
+            "Moderado" => "SystemFillColorCautionBrush",
+            _ => "SystemFillColorCriticalBrush"
+        };
+        return Application.Current.TryFindResource(key) as Brush ?? Brushes.Gray;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}

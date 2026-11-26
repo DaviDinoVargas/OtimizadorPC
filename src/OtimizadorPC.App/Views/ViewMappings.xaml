@@ -25,14 +25,7 @@
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type vm:CleanupViewModel}">
-        <ScrollViewer Padding="{DynamicResource PagePadding}">
-            <StackPanel>
-                <c:PageHeader Title="Limpeza" Subtitle="Remova arquivos temporários, caches e restos de programas">
-                    <c:PageHeader.Animation><anim:BroomAnimation /></c:PageHeader.Animation>
-                </c:PageHeader>
-                <ContentControl ContentTemplate="{StaticResource ComingSoon}" />
-            </StackPanel>
-        </ScrollViewer>
+        <views:CleanupView />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type vm:OptimizationViewModel}">

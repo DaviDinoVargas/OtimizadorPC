@@ -2,8 +2,6 @@ namespace OtimizadorPC.App.ViewModels;
 
 // Páginas dos módulos ainda não implementados. Cada uma é substituída na branch do respectivo módulo.
 
-public sealed partial class CleanupViewModel : PageViewModel { }
-
 public sealed partial class OptimizationViewModel : PageViewModel { }
 
 public sealed partial class ProcessesViewModel : PageViewModel { }
