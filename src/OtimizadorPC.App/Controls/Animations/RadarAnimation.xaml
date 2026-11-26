@@ -1,0 +1,47 @@
+<local:AnimatedIcon x:Class="OtimizadorPC.App.Controls.Animations.RadarAnimation"
+                    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:OtimizadorPC.App.Controls.Animations"
+                    Width="120" Height="72">
+    <!-- Início: ondas de radar saindo do centro -->
+    <local:AnimatedIcon.Resources>
+        <Storyboard x:Key="Loop">
+            <DoubleAnimation Storyboard.TargetName="S1" Storyboard.TargetProperty="ScaleX" From="0.2" To="1.25" Duration="0:0:2.4" RepeatBehavior="Forever" />
+            <DoubleAnimation Storyboard.TargetName="S1" Storyboard.TargetProperty="ScaleY" From="0.2" To="1.25" Duration="0:0:2.4" RepeatBehavior="Forever" />
+            <DoubleAnimation Storyboard.TargetName="R1" Storyboard.TargetProperty="Opacity" From="0.9" To="0" Duration="0:0:2.4" RepeatBehavior="Forever" />
+            <DoubleAnimation Storyboard.TargetName="S2" Storyboard.TargetProperty="ScaleX" From="0.2" To="1.25" Duration="0:0:2.4" BeginTime="0:0:0.8" RepeatBehavior="Forever" />
+            <DoubleAnimation Storyboard.TargetName="S2" Storyboard.TargetProperty="ScaleY" From="0.2" To="1.25" Duration="0:0:2.4" BeginTime="0:0:0.8" RepeatBehavior="Forever" />
+            <DoubleAnimation Storyboard.TargetName="R2" Storyboard.TargetProperty="Opacity" From="0.9" To="0" Duration="0:0:2.4" BeginTime="0:0:0.8" RepeatBehavior="Forever" />
+            <DoubleAnimation Storyboard.TargetName="S3" Storyboard.TargetProperty="ScaleX" From="0.2" To="1.25" Duration="0:0:2.4" BeginTime="0:0:1.6" RepeatBehavior="Forever" />
+            <DoubleAnimation Storyboard.TargetName="S3" Storyboard.TargetProperty="ScaleY" From="0.2" To="1.25" Duration="0:0:2.4" BeginTime="0:0:1.6" RepeatBehavior="Forever" />
+            <DoubleAnimation Storyboard.TargetName="R3" Storyboard.TargetProperty="Opacity" From="0.9" To="0" Duration="0:0:2.4" BeginTime="0:0:1.6" RepeatBehavior="Forever" />
+            <DoubleAnimation Storyboard.TargetName="Sweep" Storyboard.TargetProperty="Angle" From="0" To="360" Duration="0:0:3" RepeatBehavior="Forever" />
+            <DoubleAnimation Storyboard.TargetName="CoreScale" Storyboard.TargetProperty="ScaleX" From="1" To="1.25" Duration="0:0:0.6" AutoReverse="True" RepeatBehavior="Forever" />
+            <DoubleAnimation Storyboard.TargetName="CoreScale" Storyboard.TargetProperty="ScaleY" From="1" To="1.25" Duration="0:0:0.6" AutoReverse="True" RepeatBehavior="Forever" />
+        </Storyboard>
+    </local:AnimatedIcon.Resources>
+
+    <Canvas>
+        <Ellipse x:Name="R1" Canvas.Left="30" Canvas.Top="6" Width="60" Height="60" StrokeThickness="2"
+                 Stroke="{DynamicResource AccentFillColorDefaultBrush}" RenderTransformOrigin="0.5,0.5" Opacity="0.6">
+            <Ellipse.RenderTransform><ScaleTransform x:Name="S1" ScaleX="0.5" ScaleY="0.5" /></Ellipse.RenderTransform>
+        </Ellipse>
+        <Ellipse x:Name="R2" Canvas.Left="30" Canvas.Top="6" Width="60" Height="60" StrokeThickness="2"
+                 Stroke="{DynamicResource AccentFillColorDefaultBrush}" RenderTransformOrigin="0.5,0.5" Opacity="0.35">
+            <Ellipse.RenderTransform><ScaleTransform x:Name="S2" ScaleX="0.8" ScaleY="0.8" /></Ellipse.RenderTransform>
+        </Ellipse>
+        <Ellipse x:Name="R3" Canvas.Left="30" Canvas.Top="6" Width="60" Height="60" StrokeThickness="2"
+                 Stroke="{DynamicResource AccentFillColorDefaultBrush}" RenderTransformOrigin="0.5,0.5" Opacity="0.15">
+            <Ellipse.RenderTransform><ScaleTransform x:Name="S3" ScaleX="1.1" ScaleY="1.1" /></Ellipse.RenderTransform>
+        </Ellipse>
+
+        <!-- Varredura -->
+        <Path Data="M60,36 L60,10 A26,26 0 0 1 82,23 Z" Opacity="0.35" Fill="{DynamicResource AccentFillColorDefaultBrush}">
+            <Path.RenderTransform><RotateTransform x:Name="Sweep" CenterX="60" CenterY="36" /></Path.RenderTransform>
+        </Path>
+
+        <Ellipse Canvas.Left="53" Canvas.Top="29" Width="14" Height="14" Fill="{DynamicResource AccentFillColorDefaultBrush}" RenderTransformOrigin="0.5,0.5">
+            <Ellipse.RenderTransform><ScaleTransform x:Name="CoreScale" /></Ellipse.RenderTransform>
+        </Ellipse>
+    </Canvas>
+</local:AnimatedIcon>
