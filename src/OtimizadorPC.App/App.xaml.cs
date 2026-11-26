@@ -64,6 +64,8 @@ public partial class App : Application
         services.AddSingleton<IAppxService, AppxService>();
         services.AddSingleton<IRestorePointService, RestorePointService>();
         services.AddSingleton<IProcessService, OtimizadorPC.Infrastructure.Processes.ProcessService>();
+        services.AddSingleton<IDiskScanner, OtimizadorPC.Infrastructure.DiskAnalysis.DiskScanner>();
+        services.AddSingleton<IFileOperations, OtimizadorPC.Infrastructure.DiskAnalysis.FileOperations>();
 
         // Serviços da interface
         services.AddSingleton<ThemeService>();

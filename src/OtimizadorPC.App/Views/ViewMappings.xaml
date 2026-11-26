@@ -37,14 +37,7 @@
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type vm:DinosizeViewModel}">
-        <ScrollViewer Padding="{DynamicResource PagePadding}">
-            <StackPanel>
-                <c:PageHeader Title="Dinosize" Subtitle="Descubra o que ocupa espaço nos seus discos">
-                    <c:PageHeader.Animation><anim:TilesAnimation /></c:PageHeader.Animation>
-                </c:PageHeader>
-                <ContentControl ContentTemplate="{StaticResource ComingSoon}" />
-            </StackPanel>
-        </ScrollViewer>
+        <views:DinosizeView />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type vm:OverclockViewModel}">

@@ -1,0 +1,298 @@
+<UserControl x:Class="OtimizadorPC.App.Views.DinosizeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:vm="clr-namespace:OtimizadorPC.App.ViewModels"
+             xmlns:da="clr-namespace:OtimizadorPC.Core.DiskAnalysis;assembly=OtimizadorPC.Core"
+             xmlns:c="clr-namespace:OtimizadorPC.App.Controls"
+             xmlns:anim="clr-namespace:OtimizadorPC.App.Controls.Animations"
+             xmlns:conv="clr-namespace:OtimizadorPC.App.Converters"
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance vm:DinosizeViewModel}">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/OtimizadorPC;component/Styles/Tabs.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <conv:EnumEqualsConverter x:Key="EnumEq" />
+            <conv:BoolToVisibilityConverter x:Key="BoolVis" />
+            <conv:BoolToVisibilityConverter x:Key="InvBoolVis" Invert="True" />
+            <conv:NullToVisibilityConverter x:Key="NullVis" />
+            <conv:LevelToBrushConverter x:Key="LevelBrush" />
+            <conv:InverseBoolConverter x:Key="InvBool" />
+            <conv:EnumToVisibilityConverter x:Key="EnumVisInt" />
+
+            <!-- Menu de contexto compartilhado (pastas e arquivos) -->
+            <ContextMenu x:Key="ItemMenu" x:Shared="False" DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
+                <MenuItem Header="Abrir" Command="{Binding OpenRowCommand}"
+                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                <MenuItem Header="Mostrar no Explorador" Command="{Binding ShowInExplorerCommand}"
+                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                <MenuItem Header="Mover para outro disco…" Command="{Binding MoveCommand}"
+                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                <Separator />
+                <MenuItem Header="Enviar para a Lixeira" Command="{Binding RecycleCommand}"
+                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+            </ContextMenu>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <ScrollViewer Padding="{DynamicResource PagePadding}">
+        <StackPanel>
+            <c:PageHeader Title="Dinosize" Subtitle="Descubra o que ocupa espaço nos seus discos e libere ou mova o que quiser">
+                <c:PageHeader.Animation><anim:TilesAnimation /></c:PageHeader.Animation>
+                <c:PageHeader.Actions>
+                    <ui:Button Content="Escolher pasta…" Icon="{ui:SymbolIcon FolderOpen24}" Command="{Binding PickFolderCommand}"
+                               IsEnabled="{Binding IsScanning, Converter={StaticResource InvBool}}" />
+                </c:PageHeader.Actions>
+            </c:PageHeader>
+
+            <!-- Onde analisar -->
+            <Border Style="{StaticResource SectionCard}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="Escolha um disco" />
+                    <ItemsControl ItemsSource="{Binding Drives}" Margin="0,6,0,6" IsEnabled="{Binding IsScanning, Converter={StaticResource InvBool}}">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:DriveCard}">
+                                <ui:Button Width="230" Margin="0,0,10,10" Padding="14,10" HorizontalContentAlignment="Stretch"
+                                           Command="{Binding DataContext.ScanDriveCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                                           AutomationProperties.Name="{Binding Title}">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <ui:SymbolIcon Symbol="Storage24" FontSize="18" Margin="0,0,8,0" />
+                                            <TextBlock FontWeight="SemiBold" Text="{Binding Title}" TextTrimming="CharacterEllipsis" MaxWidth="130" />
+                                            <Border Style="{StaticResource Tag}" Margin="8,0,0,0">
+                                                <TextBlock FontSize="10" Text="{Binding Media}" />
+                                            </Border>
+                                        </StackPanel>
+                                        <ProgressBar Style="{StaticResource ThinProgress}" Margin="0,8,0,6" Maximum="1" Value="{Binding UsedFraction, Mode=OneWay}"
+                                                     Foreground="{Binding UsedFraction, Converter={StaticResource LevelBrush}}" />
+                                        <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding Subtitle}" />
+                                    </StackPanel>
+                                </ui:Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <TextBlock Style="{StaticResource CaptionText}" Margin="0,0,0,6" Text="Modo de análise" />
+                    <WrapPanel>
+                        <RadioButton Style="{StaticResource SegmentButton}" GroupName="Modo" Content="Automático" IsChecked="{Binding Mode, Converter={StaticResource EnumEq}, ConverterParameter=Automatico}" />
+                        <RadioButton Style="{StaticResource SegmentButton}" GroupName="Modo" Content="Rápido" IsChecked="{Binding Mode, Converter={StaticResource EnumEq}, ConverterParameter=Rapido}" />
+                        <RadioButton Style="{StaticResource SegmentButton}" GroupName="Modo" Content="Ultra (MFT)" IsChecked="{Binding Mode, Converter={StaticResource EnumEq}, ConverterParameter=Mft}" />
+                    </WrapPanel>
+                    <TextBlock Style="{StaticResource CaptionText}" Text="{Binding ModeHint}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Analisando -->
+            <Border Style="{StaticResource SectionCard}" Visibility="{Binding IsScanning, Converter={StaticResource BoolVis}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <anim:TilesAnimation VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="1" Margin="16,0" VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="{Binding SelectedPath, StringFormat=Analisando {0}}" />
+                        <StackPanel Orientation="Horizontal">
+                            <c:CountUpText Style="{StaticResource BigNumber}" FontSize="24" Format="Inteiro" Suffix=" arquivos" Value="{Binding ProgressFiles}" />
+                            <TextBlock Text="  ·  " Style="{StaticResource BigNumber}" FontSize="24" />
+                            <c:CountUpText Style="{StaticResource BigNumber}" FontSize="24" Format="Bytes" Value="{Binding ProgressBytes}" />
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource CaptionText}" Text="{Binding ProgressPath}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                        <TextBlock Style="{StaticResource CaptionText}" Text="{Binding Elapsed}" />
+                    </StackPanel>
+                    <ui:Button Grid.Column="2" VerticalAlignment="Center" Content="Cancelar" Command="{Binding CancelCommand}" />
+                </Grid>
+            </Border>
+
+            <ui:InfoBar Margin="0,0,0,12" IsOpen="True" IsClosable="False" Title="Aviso" Severity="Warning" Message="{Binding ResultNote}"
+                        Visibility="{Binding ResultNote, Converter={StaticResource NullVis}}" />
+            <ui:InfoBar Margin="0,0,0,12" IsOpen="True" IsClosable="False" Title="Dinosize" Severity="Informational" Message="{Binding OperationMessage}"
+                        Visibility="{Binding OperationMessage, Converter={StaticResource NullVis}}" />
+
+            <!-- Resultado -->
+            <StackPanel Visibility="{Binding HasResult, Converter={StaticResource BoolVis}}">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsScanning}" Value="True">
+                                <Setter Property="Opacity" Value="0.35" />
+                                <Setter Property="IsEnabled" Value="False" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+
+                <TextBlock Style="{StaticResource CaptionText}" Margin="2,0,0,8" Text="{Binding ResultSummary}" />
+
+                <!-- Navegação -->
+                <Border Style="{StaticResource SectionCard}" Padding="10,6">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ui:Button Icon="{ui:SymbolIcon ArrowUp24}" ToolTip="Subir um nível" Command="{Binding GoUpCommand}" Margin="0,0,8,0" AutomationProperties.Name="Subir um nível" />
+                        <ItemsControl Grid.Column="1" ItemsSource="{Binding Breadcrumb}" VerticalAlignment="Center">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type da:DirNode}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:HyperlinkButton Padding="4,2" Content="{Binding Name}"
+                                                            Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                        <ui:SymbolIcon Symbol="ChevronRight24" FontSize="12" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource CaptionText}" VerticalAlignment="Center" Margin="0,0,10,0" Text="{Binding CurrentSize}" />
+                            <ui:Button Icon="{ui:SymbolIcon ArrowClockwise24}" ToolTip="Analisar de novo" Command="{Binding RescanCommand}" AutomationProperties.Name="Analisar de novo" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Lista + mapa -->
+                <Grid Height="470" Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="5*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="6*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Style="{StaticResource SectionCard}" Margin="0" Padding="6">
+                        <ListBox ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}" Background="Transparent" BorderThickness="0"
+                                 HorizontalContentAlignment="Stretch" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.ScrollUnit="Pixel"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                                    <Setter Property="AutomationProperties.Name" Value="{Binding Name}" />
+                                    <Setter Property="Padding" Value="6,4" />
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:DirRow}">
+                                    <Grid Background="Transparent" ContextMenu="{StaticResource ItemMenu}"
+                                          Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                                        <Grid.InputBindings>
+                                            <MouseBinding Gesture="LeftDoubleClick" Command="{Binding DataContext.OpenRowCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                        </Grid.InputBindings>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="10" Height="28" CornerRadius="3" Background="{Binding ColorBrush}" VerticalAlignment="Center" />
+                                        <StackPanel Grid.Column="1" Margin="10,0">
+                                            <StackPanel Orientation="Horizontal">
+                                                <ui:SymbolIcon Symbol="Folder24" FontSize="14" Margin="0,0,6,0" Visibility="{Binding IsFolder, Converter={StaticResource BoolVis}}" />
+                                                <TextBlock Style="{StaticResource BodyText}" FontWeight="SemiBold" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                            <ProgressBar Style="{StaticResource ThinProgress}" Height="4" Margin="0,4,0,2" Maximum="1" Value="{Binding Fraction, Mode=OneWay}"
+                                                         Foreground="{Binding ColorBrush}" />
+                                            <TextBlock Style="{StaticResource CaptionText}" Text="{Binding FilesText}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                                            <TextBlock Style="{StaticResource BodyText}" FontWeight="SemiBold" HorizontalAlignment="Right" Text="{Binding SizeText}" />
+                                            <TextBlock Style="{StaticResource CaptionText}" HorizontalAlignment="Right" Text="{Binding Fraction, StringFormat={}{0:P1}}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Border>
+
+                    <Border Grid.Column="2" Style="{StaticResource SectionCard}" Margin="0" Padding="6" ClipToBounds="True">
+                        <c:TreemapView Root="{Binding CurrentNode}" ActivateCommand="{Binding NavigateCommand}" />
+                    </Border>
+                </Grid>
+
+                <!-- Ações da pasta selecionada -->
+                <WrapPanel Margin="0,0,0,12">
+                    <ui:Button Margin="0,0,8,0" Content="Abrir" Icon="{ui:SymbolIcon FolderOpen24}" Command="{Binding OpenRowCommand}" CommandParameter="{Binding SelectedRow}" />
+                    <ui:Button Margin="0,0,8,0" Content="Mostrar no Explorador" Icon="{ui:SymbolIcon Open24}" Command="{Binding ShowInExplorerCommand}" CommandParameter="{Binding SelectedRow}" />
+                    <ui:Button Margin="0,0,8,0" Content="Mover para outro disco…" Icon="{ui:SymbolIcon ArrowMove24}" Command="{Binding MoveCommand}" CommandParameter="{Binding SelectedRow}" />
+                    <ui:Button Appearance="Danger" Content="Enviar para a Lixeira" Icon="{ui:SymbolIcon Delete24}" Command="{Binding RecycleCommand}" CommandParameter="{Binding SelectedRow}" />
+                    <ui:ProgressRing Width="20" Height="20" Margin="12,0,0,0" IsIndeterminate="True" Visibility="{Binding IsWorking, Converter={StaticResource BoolVis}}" />
+                </WrapPanel>
+
+                <!-- Maiores arquivos e tipos -->
+                <WrapPanel Margin="0,0,0,8">
+                    <RadioButton Style="{StaticResource SegmentButton}" GroupName="Baixo" Content="Maiores arquivos" IsChecked="{Binding BottomTab, Converter={StaticResource EnumEq}, ConverterParameter=0}" />
+                    <RadioButton Style="{StaticResource SegmentButton}" GroupName="Baixo" Content="Tipos de arquivo" IsChecked="{Binding BottomTab, Converter={StaticResource EnumEq}, ConverterParameter=1}" />
+                </WrapPanel>
+
+                <Border Style="{StaticResource SectionCard}" Padding="6" Height="380"
+                        Visibility="{Binding BottomTab, Converter={StaticResource EnumVisInt}, ConverterParameter=0}">
+                    <ListBox ItemsSource="{Binding LargestFiles}" SelectedItem="{Binding SelectedFile}" Background="Transparent" BorderThickness="0"
+                             HorizontalContentAlignment="Stretch" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.ScrollUnit="Pixel"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                                <Setter Property="AutomationProperties.Name" Value="{Binding File.Name}" />
+                                <Setter Property="Padding" Value="6,3" />
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:FileRow}">
+                                <Grid Background="Transparent" Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                                    <Grid.ContextMenu>
+                                        <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
+                                            <MenuItem Header="Mostrar no Explorador" Command="{Binding ShowInExplorerCommand}"
+                                                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                            <MenuItem Header="Enviar para a Lixeira" Command="{Binding RecycleCommand}"
+                                                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                        </ContextMenu>
+                                    </Grid.ContextMenu>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="28" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="140" />
+                                        <ColumnDefinition Width="100" />
+                                    </Grid.ColumnDefinitions>
+                                    <Image Width="18" Height="18" Source="{Binding Icon}" />
+                                    <StackPanel Grid.Column="1" Margin="6,0">
+                                        <TextBlock Style="{StaticResource BodyText}" Text="{Binding File.Name}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Style="{StaticResource CaptionText}" Text="{Binding Folder}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2" Style="{StaticResource CaptionText}" VerticalAlignment="Center" Text="{Binding Kind}" />
+                                    <TextBlock Grid.Column="3" Style="{StaticResource BodyText}" FontWeight="SemiBold" VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding SizeText}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Border>
+
+                <Border Style="{StaticResource SectionCard}" Padding="12" Height="380"
+                        Visibility="{Binding BottomTab, Converter={StaticResource EnumVisInt}, ConverterParameter=1}">
+                    <ListBox ItemsSource="{Binding Extensions}" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch"
+                             VirtualizingPanel.ScrollUnit="Pixel" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:ExtensionRow}">
+                                <Grid Margin="0,3">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="140" />
+                                        <ColumnDefinition Width="160" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="110" />
+                                        <ColumnDefinition Width="100" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Style="{StaticResource BodyText}" FontWeight="SemiBold" Text="{Binding Stat.Extension}" />
+                                    <TextBlock Grid.Column="1" Style="{StaticResource CaptionText}" VerticalAlignment="Center" Text="{Binding Stat.Kind}" />
+                                    <ProgressBar Grid.Column="2" Style="{StaticResource ThinProgress}" VerticalAlignment="Center" Margin="0,0,12,0" Maximum="1" Value="{Binding Fraction, Mode=OneWay}" />
+                                    <TextBlock Grid.Column="3" Style="{StaticResource CaptionText}" VerticalAlignment="Center" Text="{Binding Stat.Count, StringFormat={}{0:N0} arquivos}" />
+                                    <TextBlock Grid.Column="4" Style="{StaticResource BodyText}" FontWeight="SemiBold" HorizontalAlignment="Right" Text="{Binding SizeText}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Border>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
