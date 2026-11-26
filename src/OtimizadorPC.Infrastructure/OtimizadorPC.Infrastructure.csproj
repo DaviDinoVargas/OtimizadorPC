@@ -14,6 +14,7 @@
     <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.6" />
     <PackageReference Include="System.Management" Version="11.0.0" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="11.0.0" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="11.0.0" />
   </ItemGroup>
 
 </Project>
