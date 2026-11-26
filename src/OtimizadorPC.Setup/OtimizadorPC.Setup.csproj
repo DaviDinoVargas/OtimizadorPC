@@ -3,9 +3,27 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <RootNamespace>OtimizadorPC.Setup</RootNamespace>
+    <AssemblyName>OtimizadorPC.Setup</AssemblyName>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <Product>Instalador do OtimizadorPC</Product>
+    <ApplicationManifest Condition="'$(Configuration)' == 'Debug'">app.Debug.manifest</ApplicationManifest>
+    <ApplicationManifest Condition="'$(Configuration)' != 'Debug'">app.manifest</ApplicationManifest>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="11.0.0" />
+    <PackageReference Include="WPF-UI" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\**\*.png;Assets\**\*.ico" />
+    <!-- Pacote do aplicativo gerado por build/Publicar.ps1 (não versionado) -->
+    <EmbeddedResource Include="Payload\payload.zip" LogicalName="payload.zip" Condition="Exists('Payload\payload.zip')" />
+    <None Include="..\..\LICENSE" Link="LICENSE" />
+    <EmbeddedResource Include="..\..\LICENSE" LogicalName="LICENSE" />
+  </ItemGroup>
 
 </Project>
