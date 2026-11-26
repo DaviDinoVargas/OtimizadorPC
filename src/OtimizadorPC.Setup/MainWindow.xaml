@@ -1,12 +1,195 @@
-﻿<Window x:Class="OtimizadorPC.Setup.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:OtimizadorPC.Setup"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+﻿<ui:FluentWindow x:Class="OtimizadorPC.Setup.MainWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 xmlns:local="clr-namespace:OtimizadorPC.Setup"
+                 mc:Ignorable="d" d:DataContext="{d:DesignInstance local:SetupViewModel}"
+                 Title="Instalador do OtimizadorPC" Width="820" Height="560" ResizeMode="NoResize"
+                 WindowStartupLocation="CenterScreen" ExtendsContentIntoTitleBar="True" WindowBackdropType="Mica" WindowCornerPreference="Round">
+    <ui:FluentWindow.Resources>
+        <local:PageToVisibilityConverter x:Key="Page" />
+        <local:BoolToVisibilityConverter x:Key="BoolVis" />
+        <local:BoolToVisibilityConverter x:Key="InvBoolVis" Invert="True" />
+        <local:StepSymbolConverter x:Key="StepSymbol" />
+        <local:StepBrushConverter x:Key="StepBrush" />
 
+        <Style x:Key="Title" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="26" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+        </Style>
+        <Style x:Key="Body" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+        </Style>
+
+        <!-- Animação do painel lateral: anéis girando em volta do logo -->
+        <Storyboard x:Key="Brand" RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetName="RingSpin" Storyboard.TargetProperty="Angle" From="0" To="360" Duration="0:0:12" />
+            <DoubleAnimation Storyboard.TargetName="RingSpin2" Storyboard.TargetProperty="Angle" From="360" To="0" Duration="0:0:18" />
+            <DoubleAnimation Storyboard.TargetName="LogoPulse" Storyboard.TargetProperty="ScaleX" From="1" To="1.06" Duration="0:0:1.6" AutoReverse="True" />
+            <DoubleAnimation Storyboard.TargetName="LogoPulse" Storyboard.TargetProperty="ScaleY" From="1" To="1.06" Duration="0:0:1.6" AutoReverse="True" />
+        </Storyboard>
+    </ui:FluentWindow.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="270" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Painel da marca -->
+        <Border>
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#0F766E" Offset="0" />
+                    <GradientStop Color="#4338CA" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+            <Grid>
+                <Canvas Width="200" Height="200" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,-60,0,0">
+                    <Ellipse Width="200" Height="200" Stroke="#55FFFFFF" StrokeThickness="2" StrokeDashArray="2 6" RenderTransformOrigin="0.5,0.5">
+                        <Ellipse.RenderTransform><RotateTransform x:Name="RingSpin" /></Ellipse.RenderTransform>
+                    </Ellipse>
+                    <Ellipse Canvas.Left="25" Canvas.Top="25" Width="150" Height="150" Stroke="#33FFFFFF" StrokeThickness="6" StrokeDashArray="10 8" RenderTransformOrigin="0.5,0.5">
+                        <Ellipse.RenderTransform><RotateTransform x:Name="RingSpin2" /></Ellipse.RenderTransform>
+                    </Ellipse>
+                    <Image Canvas.Left="52" Canvas.Top="52" Width="96" Height="96" Source="pack://application:,,,/Assets/logo.png" RenderTransformOrigin="0.5,0.5">
+                        <Image.RenderTransform><ScaleTransform x:Name="LogoPulse" /></Image.RenderTransform>
+                    </Image>
+                </Canvas>
+                <StackPanel VerticalAlignment="Bottom" Margin="24,0,24,28">
+                    <TextBlock FontSize="24" FontWeight="SemiBold" Foreground="White" Text="OtimizadorPC" />
+                    <TextBlock Foreground="#CCFFFFFF" Text="{Binding Version, StringFormat=Versão {0}}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Conteúdo -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <ui:TitleBar Title="Instalador" ShowMaximize="False" ShowMinimize="True" />
+
+            <Grid x:Name="Pages" Grid.Row="1" Margin="32,8,32,0">
+                <Grid.RenderTransform><TranslateTransform x:Name="PageSlide" /></Grid.RenderTransform>
+
+                <!-- Boas-vindas -->
+                <StackPanel Visibility="{Binding Page, Converter={StaticResource Page}, ConverterParameter=BoasVindas}">
+                    <TextBlock Style="{StaticResource Title}" Text="{Binding WelcomeTitle}" />
+                    <TextBlock Style="{StaticResource Body}" Text="{Binding WelcomeText}" />
+                    <Border Margin="0,20,0,0" Padding="14" CornerRadius="8" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="O que será feito" />
+                            <TextBlock Style="{StaticResource Body}" Margin="0,6,0,0" Text="• Copiar o aplicativo para a pasta escolhida" />
+                            <TextBlock Style="{StaticResource Body}" Text="• Criar atalhos e registrar em &quot;Aplicativos instalados&quot;" />
+                            <TextBlock Style="{StaticResource Body}" Text="{Binding RuntimeText, StringFormat=• {0}}" />
+                            <TextBlock Style="{StaticResource Body}" Text="• Opcional: driver de sensores para ler temperaturas" />
+                        </StackPanel>
+                    </Border>
+                    <ui:InfoBar Margin="0,16,0,0" IsOpen="True" IsClosable="False" Severity="Error" Title="Pacote ausente"
+                                Message="Este instalador foi compilado sem o aplicativo. Gere-o com build/Publicar.ps1."
+                                Visibility="{Binding HasPayload, Converter={StaticResource InvBoolVis}}" />
+                </StackPanel>
+
+                <!-- Licença -->
+                <DockPanel Visibility="{Binding Page, Converter={StaticResource Page}, ConverterParameter=Licenca}">
+                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource Title}" Text="Licença" />
+                    <CheckBox DockPanel.Dock="Bottom" Margin="0,10,0,0" Content="Li e aceito os termos da licença" IsChecked="{Binding LicenseAccepted}" />
+                    <Border CornerRadius="8" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Padding="12">
+                        <ScrollViewer>
+                            <TextBlock FontFamily="Consolas" FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding LicenseText}" />
+                        </ScrollViewer>
+                    </Border>
+                </DockPanel>
+
+                <!-- Opções -->
+                <StackPanel Visibility="{Binding Page, Converter={StaticResource Page}, ConverterParameter=Opcoes}">
+                    <TextBlock Style="{StaticResource Title}" Text="Opções de instalação" />
+                    <TextBlock Style="{StaticResource Body}" Text="Pasta de instalação" />
+                    <Grid Margin="0,6,0,16">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <ui:TextBox Text="{Binding InstallDir, UpdateSourceTrigger=PropertyChanged}" />
+                        <ui:Button Grid.Column="1" Margin="8,0,0,0" Content="Procurar…" Icon="{ui:SymbolIcon FolderOpen24}" Command="{Binding BrowseCommand}" />
+                    </Grid>
+                    <CheckBox Content="Atalho no menu Iniciar" IsChecked="{Binding StartMenuShortcut}" />
+                    <CheckBox Content="Atalho na Área de Trabalho" IsChecked="{Binding DesktopShortcut}" />
+                    <CheckBox Content="Iniciar o OtimizadorPC junto com o Windows" IsChecked="{Binding StartWithWindows}" />
+                    <CheckBox IsChecked="{Binding InstallSensorDriver}" Visibility="{Binding SensorDriverInstalled, Converter={StaticResource InvBoolVis}}">
+                        <TextBlock TextWrapping="Wrap" Text="Instalar o driver de sensores PawnIO (baixado do site oficial; mostra temperaturas e consumo do processador)" />
+                    </CheckBox>
+                    <TextBlock Style="{StaticResource Body}" Margin="0,12,0,0" FontSize="12" Text="{Binding RuntimeText}" />
+                </StackPanel>
+
+                <!-- Progresso -->
+                <StackPanel Visibility="{Binding Page, Converter={StaticResource Page}, ConverterParameter=Progresso}">
+                    <TextBlock Style="{StaticResource Title}" Text="Instalando…" Visibility="{Binding IsUninstall, Converter={StaticResource InvBoolVis}}" />
+                    <TextBlock Style="{StaticResource Title}" Text="Desinstalando…" Visibility="{Binding IsUninstall, Converter={StaticResource BoolVis}}" />
+                    <ProgressBar Height="6" Margin="0,4,0,18" Maximum="100" Value="{Binding OverallProgress}" />
+                    <ItemsControl ItemsSource="{Binding Steps}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type local:StepItem}">
+                                <Grid Margin="0,5">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="30" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                    <ui:SymbolIcon Symbol="{Binding State, Converter={StaticResource StepSymbol}}" FontSize="20" VerticalAlignment="Top"
+                                                   Foreground="{Binding State, Converter={StaticResource StepBrush}}" />
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock FontSize="14" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding Title}" />
+                                        <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding Detail}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <!-- Concluído -->
+                <StackPanel Visibility="{Binding Page, Converter={StaticResource Page}, ConverterParameter=Concluido}">
+                    <Grid Width="80" Height="80" HorizontalAlignment="Left" Margin="0,0,0,12">
+                        <Ellipse x:Name="DoneRing" Stroke="{DynamicResource SystemFillColorSuccessBrush}" StrokeThickness="5" StrokeDashArray="50 50" StrokeDashOffset="0" />
+                        <Path x:Name="DoneCheck" Data="M24,41 L35,52 L57,29" StrokeThickness="6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              StrokeDashArray="10 10" Stroke="{DynamicResource SystemFillColorSuccessBrush}" />
+                    </Grid>
+                    <TextBlock Style="{StaticResource Title}" Text="Instalação concluída" Visibility="{Binding IsUninstall, Converter={StaticResource InvBoolVis}}" />
+                    <TextBlock Style="{StaticResource Title}" Text="OtimizadorPC removido" Visibility="{Binding IsUninstall, Converter={StaticResource BoolVis}}" />
+                    <TextBlock Style="{StaticResource Body}" Text="Tudo pronto. Você pode abrir o OtimizadorPC pelo menu Iniciar." Visibility="{Binding IsUninstall, Converter={StaticResource InvBoolVis}}" />
+                    <TextBlock Style="{StaticResource Body}" Text="Obrigado por ter usado o OtimizadorPC." Visibility="{Binding IsUninstall, Converter={StaticResource BoolVis}}" />
+                    <CheckBox Margin="0,18,0,0" Content="Abrir o OtimizadorPC agora" IsChecked="{Binding LaunchAfter}" Visibility="{Binding IsUninstall, Converter={StaticResource InvBoolVis}}" />
+                </StackPanel>
+
+                <!-- Confirmar remoção -->
+                <StackPanel Visibility="{Binding Page, Converter={StaticResource Page}, ConverterParameter=ConfirmarRemocao}">
+                    <TextBlock Style="{StaticResource Title}" Text="Desinstalar o OtimizadorPC" />
+                    <TextBlock Style="{StaticResource Body}" Text="O aplicativo, os atalhos e a tarefa de inicialização serão removidos. Ajustes feitos no Windows pelo OtimizadorPC continuam valendo (dá para desfazê-los antes, pelo próprio app)." />
+                    <CheckBox Margin="0,18,0,0" Content="Apagar também minhas configurações, logs e histórico de benchmarks" IsChecked="{Binding RemoveUserData}" />
+                </StackPanel>
+
+                <!-- Erro -->
+                <StackPanel Visibility="{Binding Page, Converter={StaticResource Page}, ConverterParameter=Erro}">
+                    <ui:SymbolIcon Symbol="ErrorCircle24" FontSize="56" HorizontalAlignment="Left" Foreground="{DynamicResource SystemFillColorCriticalBrush}" Margin="0,0,0,12" />
+                    <TextBlock Style="{StaticResource Title}" Text="Algo deu errado" />
+                    <TextBlock Style="{StaticResource Body}" Text="{Binding ErrorMessage}" />
+                </StackPanel>
+            </Grid>
+
+            <!-- Botões -->
+            <Border Grid.Row="2" Padding="32,14" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+                <Grid>
+                    <ui:Button Content="Cancelar" Command="{Binding CancelCommand}" HorizontalAlignment="Left" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <ui:Button Margin="0,0,8,0" Content="Voltar" Command="{Binding BackCommand}" Visibility="{Binding CanGoBack, Converter={StaticResource BoolVis}}" />
+                        <ui:Button Appearance="Primary" MinWidth="120" Content="{Binding NextText}" Command="{Binding NextCommand}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
-</Window>
+</ui:FluentWindow>
