@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -6,8 +6,12 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>OtimizadorPC.App</RootNamespace>
     <AssemblyName>OtimizadorPC</AssemblyName>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <ApplicationManifest Condition="'$(Configuration)' == 'Debug'">app.Debug.manifest</ApplicationManifest>
+    <ApplicationManifest Condition="'$(Configuration)' != 'Debug'">app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,6 +21,16 @@
 
   <ItemGroup>
     <Resource Include="Assets\**\*.png;Assets\**\*.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="11.0.0" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="11.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+    <PackageReference Include="SkiaSharp.Views.WPF" Version="4.157.0" />
+    <PackageReference Include="WPF-UI" Version="4.3.0" />
   </ItemGroup>
 
 </Project>
