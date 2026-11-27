@@ -22,3 +22,9 @@ public interface IFileOperations
     /// </summary>
     Task MoveFolderAsync(string source, string destination, bool leaveJunction, IProgress<string>? progress, CancellationToken ct);
 }
+
+public interface IDuplicateScanner
+{
+    /// <summary>Arquivos idênticos (a partir de <paramref name="minSize"/> bytes) dentro de <paramref name="root"/>.</summary>
+    Task<IReadOnlyList<DuplicateGroup>> FindAsync(string root, long minSize, IProgress<DuplicateProgress>? progress, CancellationToken ct);
+}
