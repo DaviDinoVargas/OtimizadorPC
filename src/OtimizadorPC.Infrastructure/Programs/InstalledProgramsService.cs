@@ -68,7 +68,7 @@ public sealed class InstalledProgramsService(IFileOperations files) : IInstalled
                         Name = name!,
                         Publisher = (k.GetValue("Publisher") as string)?.Trim(),
                         Version = (k.GetValue("DisplayVersion") as string)?.Trim(),
-                        InstallDate = ProgramRules.ParseInstallDate(k.GetValue("InstallDate") as string),
+                        InstallDate = ProgramRules.ParseInstallDate(k.GetValue("InstallDate") as string) ?? FolderDate(location),
                         SizeBytes = size,
                         InstallLocation = string.IsNullOrWhiteSpace(location) ? null : location,
                         UninstallString = uninstall,
@@ -84,6 +84,13 @@ public sealed class InstalledProgramsService(IFileOperations files) : IInstalled
             }
         }
         catch (Exception ex) { Log.Warning(ex, "Não foi possível ler {Label}", label); }
+    }
+
+    /// <summary>Sem data no registro: usa a criação da pasta de instalação como aproximação.</summary>
+    private static DateTime? FolderDate(string? location)
+    {
+        try { return !string.IsNullOrWhiteSpace(location) && Directory.Exists(location) ? Directory.GetCreationTime(location) : null; }
+        catch (Exception) { return null; }
     }
 
     /// <summary>Entrada órfã: não é MSI e o executável do desinstalador sumiu.</summary>

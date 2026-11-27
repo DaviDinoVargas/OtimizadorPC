@@ -35,6 +35,28 @@ public static partial class ProgramRules
         return null;
     }
 
+    /// <summary>
+    /// Programas cuja pasta de instalação pode ser medida sem enganar: a pasta não é dividida com outro programa
+    /// nem contém a pasta de outro (ex.: três jogos apontando para a pasta do launcher daria o mesmo tamanho aos três).
+    /// </summary>
+    public static IReadOnlySet<string> MeasurableIds(IEnumerable<InstalledProgram> programs)
+    {
+        var withLocation = programs
+            .Where(p => !string.IsNullOrWhiteSpace(p.InstallLocation))
+            .Select(p => (p.Id, Path: NormalizePath(p.InstallLocation!)))
+            .ToList();
+        var result = new HashSet<string>();
+        foreach (var (id, path) in withLocation)
+        {
+            var conflict = withLocation.Any(o => o.Id != id &&
+                (o.Path == path || o.Path.StartsWith(path + "\\", StringComparison.Ordinal)));
+            if (!conflict) result.Add(id);
+        }
+        return result;
+    }
+
+    public static string NormalizePath(string path) => path.Trim().Trim('"').Replace('/', '\\').TrimEnd('\\').ToLowerInvariant();
+
     // =====================================================================
     // Linha de comando do desinstalador
     // =====================================================================

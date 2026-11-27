@@ -114,6 +114,21 @@ public sealed class ProgramRulesTests
     }
 
     [Fact]
+    public void Pasta_dividida_ou_que_contem_outra_nao_e_medida()
+    {
+        InstalledProgram L(string id, string? loc) => P(id, id: id) with { InstallLocation = loc };
+        var ids = ProgramRules.MeasurableIds(
+        [
+            L("genshin", @"D:\HoYoPlay"), L("zzz", @"D:\HoYoPlay\"), // mesma pasta do launcher
+            L("lol", "A:/Riot Games/League of Legends"),              // barra normal também conta
+            L("riot", @"A:\Riot Games"),                              // contém a pasta de outro programa
+            L("discord", @"C:\Users\x\AppData\Local\Discord"),
+            L("semPasta", null),
+        ]);
+        Assert.Equal(["discord", "lol"], ids.Order());
+    }
+
+    [Fact]
     public void Limpa_sufixos_do_fabricante()
     {
         Assert.Equal("Valve", ProgramRules.CleanPublisher("Valve Corporation"));
