@@ -40,6 +40,37 @@
             <ui:InfoBar Title="Temperaturas indisponíveis" IsOpen="{Binding SensorDriverMissing}" IsClosable="True" Severity="Informational" Margin="0,0,12,12"
                         Message="Para ler temperatura e consumo do processador, execute o OtimizadorPC como administrador com o driver de sensores (PawnIO) instalado pelo instalador." />
 
+            <!-- Saúde do PC -->
+            <Border Style="{StaticResource SectionCard}" Margin="0,0,12,12" Padding="24,20">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid Width="150" Height="150">
+                        <c:RingGauge Thickness="14" Value="{Binding HealthScore}" TrackBrush="{DynamicResource ControlFillColorSecondaryBrush}"
+                                     FillBrush="{DynamicResource AccentGradientBrush}" Effect="{DynamicResource AccentGlowEffect}" />
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <c:CountUpText HorizontalAlignment="Center" Style="{StaticResource GradientNumber}" FontSize="46" Format="Inteiro" Value="{Binding HealthScore}" />
+                            <TextBlock HorizontalAlignment="Center" Style="{StaticResource Eyebrow}" Text="DE 100" />
+                        </StackPanel>
+                    </Grid>
+                    <StackPanel Grid.Column="1" Margin="28,0" VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource Eyebrow}" Text="SAÚDE DO PC" />
+                        <TextBlock FontFamily="{StaticResource DisplayFont}" FontSize="28" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding HealthLabel}" />
+                        <TextBlock Style="{StaticResource CaptionText}" Margin="0,4,0,0" Text="{Binding HealthSummary}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                        <Button Style="{StaticResource GlowButton}" Margin="0,0,0,8" Command="{Binding OpenCommand}" CommandParameter="limpeza" AutomationProperties.Name="Limpeza rápida">
+                            <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Broom24" Margin="0,0,8,0" Foreground="White" /><TextBlock Text="Limpeza rápida" /></StackPanel>
+                        </Button>
+                        <ui:Button HorizontalAlignment="Stretch" Margin="0,0,0,8" Content="Otimizar agora" Icon="{ui:SymbolIcon Flash24}" Command="{Binding OpenCommand}" CommandParameter="otimizacao" />
+                        <ui:Button HorizontalAlignment="Stretch" Content="Analisar disco" Icon="{ui:SymbolIcon DataTreemap24}" Command="{Binding OpenCommand}" CommandParameter="dinosize" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
             <!-- Métricas ao vivo -->
             <UniformGrid Columns="{Binding ActualWidth, ElementName=Root, Converter={StaticResource Cols}}">
                 <!-- CPU -->
@@ -47,16 +78,16 @@
                     <Grid>
                         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="56" /></Grid.RowDefinitions>
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="DeveloperBoard24" FontSize="18" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
-                            <TextBlock Margin="8,0,0,0" Style="{StaticResource SectionTitle}" Text="Processador" />
+                            <Border Style="{StaticResource IconTile}" Width="34" Height="34"><ui:SymbolIcon Symbol="DeveloperBoard24" FontSize="18" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" /></Border>
+                            <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Style="{StaticResource SectionTitle}" Text="Processador" />
                         </StackPanel>
                         <Grid Grid.Row="1" Margin="0,8,0,4">
                             <StackPanel>
                                 <TextBlock Style="{StaticResource BigNumber}" Text="{Binding CpuLoad, StringFormat={}{0:0}%}" />
                                 <TextBlock Style="{StaticResource CaptionText}" Text="{Binding CpuDetail}" TextTrimming="CharacterEllipsis" />
                             </StackPanel>
-                            <c:RingGauge Width="54" Height="54" HorizontalAlignment="Right" Thickness="6" Value="{Binding CpuLoad}"
-                                         TrackBrush="{DynamicResource ControlStrokeColorDefaultBrush}" FillBrush="{DynamicResource AccentFillColorDefaultBrush}" />
+                            <c:RingGauge Width="58" Height="58" HorizontalAlignment="Right" Thickness="6" Value="{Binding CpuLoad}"
+                                         TrackBrush="{DynamicResource ControlStrokeColorDefaultBrush}" FillBrush="{DynamicResource AccentGradientBrush}" />
                         </Grid>
                         <c:Sparkline Grid.Row="2" Margin="-16,0,-16,0" Values="{Binding CpuHistory}" Stroke="{DynamicResource AccentFillColorDefaultBrush}" />
                     </Grid>
@@ -67,15 +98,15 @@
                     <Grid>
                         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="56" /></Grid.RowDefinitions>
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Ram20" FontSize="18" Foreground="#8B5CF6" />
-                            <TextBlock Margin="8,0,0,0" Style="{StaticResource SectionTitle}" Text="Memória" />
+                            <Border Style="{StaticResource IconTile}" Width="34" Height="34"><ui:SymbolIcon Symbol="Ram20" FontSize="18" Foreground="#A78BFA" /></Border>
+                            <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Style="{StaticResource SectionTitle}" Text="Memória" />
                         </StackPanel>
                         <Grid Grid.Row="1" Margin="0,8,0,4">
                             <StackPanel>
                                 <TextBlock Style="{StaticResource BigNumber}" Text="{Binding RamPercent, StringFormat={}{0:0}%}" />
                                 <TextBlock Style="{StaticResource CaptionText}" Text="{Binding RamDetail}" />
                             </StackPanel>
-                            <c:RingGauge Width="54" Height="54" HorizontalAlignment="Right" Thickness="6" Value="{Binding RamPercent}"
+                            <c:RingGauge Width="58" Height="58" HorizontalAlignment="Right" Thickness="6" Value="{Binding RamPercent}"
                                          TrackBrush="{DynamicResource ControlStrokeColorDefaultBrush}" FillBrush="#8B5CF6" />
                         </Grid>
                         <c:Sparkline Grid.Row="2" Margin="-16,0,-16,0" Values="{Binding RamHistory}" Stroke="#8B5CF6" />
@@ -87,15 +118,15 @@
                     <Grid>
                         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="56" /></Grid.RowDefinitions>
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Games24" FontSize="18" Foreground="#F59E0B" />
-                            <TextBlock Margin="8,0,0,0" Style="{StaticResource SectionTitle}" Text="Placa de vídeo" />
+                            <Border Style="{StaticResource IconTile}" Width="34" Height="34"><ui:SymbolIcon Symbol="Games24" FontSize="18" Foreground="#FBBF24" /></Border>
+                            <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Style="{StaticResource SectionTitle}" Text="Placa de vídeo" />
                         </StackPanel>
                         <Grid Grid.Row="1" Margin="0,8,0,4">
                             <StackPanel>
                                 <TextBlock Style="{StaticResource BigNumber}" Text="{Binding GpuLoad, StringFormat={}{0:0}%}" />
                                 <TextBlock Style="{StaticResource CaptionText}" Text="{Binding GpuDetail}" TextTrimming="CharacterEllipsis" />
                             </StackPanel>
-                            <c:RingGauge Width="54" Height="54" HorizontalAlignment="Right" Thickness="6" Value="{Binding GpuLoad}"
+                            <c:RingGauge Width="58" Height="58" HorizontalAlignment="Right" Thickness="6" Value="{Binding GpuLoad}"
                                          TrackBrush="{DynamicResource ControlStrokeColorDefaultBrush}" FillBrush="#F59E0B" />
                         </Grid>
                         <c:Sparkline Grid.Row="2" Margin="-16,0,-16,0" Values="{Binding GpuHistory}" Stroke="#F59E0B" />
@@ -107,15 +138,15 @@
                     <Grid>
                         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Storage24" FontSize="18" Foreground="#0EA5E9" />
-                            <TextBlock Margin="8,0,0,0" Style="{StaticResource SectionTitle}" Text="Disco do sistema" />
+                            <Border Style="{StaticResource IconTile}" Width="34" Height="34"><ui:SymbolIcon Symbol="Storage24" FontSize="18" Foreground="#38BDF8" /></Border>
+                            <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Style="{StaticResource SectionTitle}" Text="Disco do sistema" />
                         </StackPanel>
                         <Grid Grid.Row="1" Margin="0,8,0,4">
                             <StackPanel>
                                 <TextBlock Style="{StaticResource BigNumber}" Text="{Binding SystemDiskUsed, StringFormat={}{0:0}%}" />
                                 <TextBlock Style="{StaticResource CaptionText}" Text="{Binding SystemDiskDetail}" />
                             </StackPanel>
-                            <c:RingGauge Width="54" Height="54" HorizontalAlignment="Right" Thickness="6" Value="{Binding SystemDiskUsed}"
+                            <c:RingGauge Width="58" Height="58" HorizontalAlignment="Right" Thickness="6" Value="{Binding SystemDiskUsed}"
                                          TrackBrush="{DynamicResource ControlStrokeColorDefaultBrush}" FillBrush="{Binding SystemDiskUsed, Converter={StaticResource LevelBrush}}" />
                         </Grid>
                         <ui:Button Grid.Row="2" Margin="0,10,0,0" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Content="Liberar espaço"
