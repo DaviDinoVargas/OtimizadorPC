@@ -11,8 +11,15 @@ public sealed class EnumEqualsConverter : IValueConverter
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         => value?.ToString() == parameter?.ToString();
 
+    /// <summary>Converte o parâmetro de volta para o tipo da propriedade: enum, número ou verdadeiro/falso.</summary>
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        => value is true && parameter is string p ? Enum.Parse(targetType, p) : Binding.DoNothing;
+    {
+        if (value is not true || parameter is not string p) return Binding.DoNothing;
+        var type = Nullable.GetUnderlyingType(targetType) ?? targetType;
+        if (type.IsEnum) return Enum.Parse(type, p);
+        if (type == typeof(bool)) return bool.Parse(p);
+        return System.Convert.ChangeType(p, type, CultureInfo.InvariantCulture);
+    }
 }
 
 public sealed class BoolToVisibilityConverter : IValueConverter
