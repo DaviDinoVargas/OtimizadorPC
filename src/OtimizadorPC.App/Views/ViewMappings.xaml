@@ -29,6 +29,10 @@
         <views:DinosizeView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type vm:ProgramsViewModel}">
+        <views:ProgramsView />
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type vm:OverclockViewModel}">
         <views:OverclockView />
     </DataTemplate>

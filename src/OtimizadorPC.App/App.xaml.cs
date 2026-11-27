@@ -67,6 +67,7 @@ public partial class App : Application
         services.AddSingleton<IProcessService, OtimizadorPC.Infrastructure.Processes.ProcessService>();
         services.AddSingleton<IDiskScanner, OtimizadorPC.Infrastructure.DiskAnalysis.DiskScanner>();
         services.AddSingleton<IFileOperations, OtimizadorPC.Infrastructure.DiskAnalysis.FileOperations>();
+        services.AddSingleton<IInstalledProgramsService, OtimizadorPC.Infrastructure.Programs.InstalledProgramsService>();
         services.AddSingleton<IBenchmarkService, BenchmarkService>();
         services.AddSingleton<IBenchmarkHistory, BenchmarkHistory>();
         services.AddSingleton<ICpuStress, CpuStress>();
@@ -87,6 +88,7 @@ public partial class App : Application
         services.AddSingleton<OptimizationViewModel>();
         services.AddSingleton<ProcessesViewModel>();
         services.AddSingleton<DinosizeViewModel>();
+        services.AddSingleton<ProgramsViewModel>();
         services.AddSingleton<OverclockViewModel>();
         services.AddSingleton<SettingsViewModel>();
     }

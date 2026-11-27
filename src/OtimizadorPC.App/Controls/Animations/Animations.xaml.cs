@@ -19,3 +19,5 @@ public partial class PaperPlaneAnimation : AnimatedIcon { public PaperPlaneAnima
 public partial class PaletteAnimation : AnimatedIcon { public PaletteAnimation() => InitializeComponent(); }
 
 public partial class SuccessAnimation : AnimatedIcon { public SuccessAnimation() => InitializeComponent(); }
+
+public partial class PackagesAnimation : AnimatedIcon { public PackagesAnimation() => InitializeComponent(); }
