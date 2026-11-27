@@ -67,9 +67,9 @@ public static class NetworkCatalog
         new("AWS São Paulo", "dynamodb.sa-east-1.amazonaws.com", "Servidores de jogos"),
         new("AWS Virgínia (EUA)", "dynamodb.us-east-1.amazonaws.com", "Servidores de jogos"),
         new("AWS Frankfurt", "dynamodb.eu-central-1.amazonaws.com", "Servidores de jogos"),
-        new("League of Legends (BR)", "104.160.152.3", "Jogos"),
         new("Steam", "store.steampowered.com", "Jogos"),
-        new("Valorant / Riot", "riotgames.com", "Jogos"),
+        new("Riot Games", "riotgames.com", "Jogos"),
+        new("Discord", "discord.com", "Voz e chat"),
     ];
 }
 
