@@ -11,6 +11,9 @@ public sealed partial class NavItem : ObservableObject
     public required SymbolRegular Icon { get; init; }
     public required Type ViewModelType { get; init; }
 
+    /// <summary>Seção da barra lateral (ex.: "PAINEL", "FERRAMENTAS").</summary>
+    public string Group { get; init; } = string.Empty;
+
     /// <summary>Texto curto opcional exibido ao lado do item (ex.: "3 GB").</summary>
     [ObservableProperty]
     private string? _badge;

@@ -11,7 +11,7 @@
                  mc:Ignorable="d" d:DataContext="{d:DesignInstance vm:MainViewModel}"
                  Title="OtimizadorPC" Width="1280" Height="820" MinWidth="980" MinHeight="640"
                  WindowStartupLocation="CenterScreen" ExtendsContentIntoTitleBar="True"
-                 WindowBackdropType="Mica" WindowCornerPreference="Round">
+                 WindowBackdropType="None" WindowCornerPreference="Round" Background="{DynamicResource ApplicationBackgroundBrush}">
     <ui:FluentWindow.Resources>
         <conv:BoolToVisibilityConverter x:Key="InvBoolVis" Invert="True" />
         <conv:NullToVisibilityConverter x:Key="NullVis" />
@@ -23,7 +23,7 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <ui:SymbolIcon Symbol="{Binding Icon}" FontSize="20" Margin="2,0,0,0" />
+                <ui:SymbolIcon x:Name="Icon" Symbol="{Binding Icon}" FontSize="20" Margin="2,0,0,0" />
                 <TextBlock Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center" FontSize="14" Text="{Binding Title}" TextTrimming="CharacterEllipsis"
                            Visibility="{Binding DataContext.IsCompact, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InvBoolVis}}" />
                 <Border Grid.Column="2" CornerRadius="8" Padding="6,1" Background="{DynamicResource AccentFillColorDefaultBrush}"
@@ -31,16 +31,29 @@
                     <TextBlock FontSize="11" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" Text="{Binding Badge}" />
                 </Border>
             </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                    <Setter TargetName="Icon" Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                    <Setter TargetName="Icon" Property="Filled" Value="True" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
         </DataTemplate>
+
+        <!-- Itens agrupados por seção -->
+        <CollectionViewSource x:Key="GroupedNav" Source="{Binding MainItems}">
+            <CollectionViewSource.GroupDescriptions>
+                <PropertyGroupDescription PropertyName="Group" />
+            </CollectionViewSource.GroupDescriptions>
+        </CollectionViewSource>
     </ui:FluentWindow.Resources>
 
-    <Grid>
+    <Grid Background="{DynamicResource SidebarBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <ui:TitleBar Grid.Row="0" Title="OtimizadorPC" CloseWindowByDoubleClickOnIcon="True">
+        <ui:TitleBar Grid.Row="0" Title="" CloseWindowByDoubleClickOnIcon="True">
             <ui:TitleBar.Icon>
                 <ui:ImageIcon Source="pack://application:,,,/Assets/logo.png" />
             </ui:TitleBar.Icon>
@@ -53,31 +66,55 @@
             </Grid.ColumnDefinitions>
 
             <!-- Barra lateral -->
-            <Border x:Name="Sidebar" Grid.Column="0" Width="248">
+            <Border x:Name="Sidebar" Grid.Column="0" Width="248" Background="{DynamicResource SidebarBackgroundBrush}">
                 <DockPanel Margin="10,0,10,12">
-                    <Grid DockPanel.Dock="Top" Margin="0,0,0,10">
-                        <Button Style="{StaticResource SidebarIconButton}" HorizontalAlignment="Left" Command="{Binding ToggleSidebarCommand}"
-                                ToolTip="Expandir ou recolher o menu">
-                            <ui:SymbolIcon Symbol="Navigation24" FontSize="20" />
+                    <!-- Marca -->
+                    <Grid DockPanel.Dock="Top" Margin="4,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button Style="{StaticResource SidebarIconButton}" Command="{Binding ToggleSidebarCommand}" ToolTip="Expandir ou recolher o menu"
+                                AutomationProperties.Name="Expandir ou recolher o menu">
+                            <Image Width="26" Height="26" Source="pack://application:,,,/Assets/logo.png" RenderOptions.BitmapScalingMode="HighQuality" />
                         </Button>
+                        <StackPanel Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center"
+                                    Visibility="{Binding IsCompact, Converter={StaticResource InvBoolVis}}">
+                            <TextBlock FontFamily="{StaticResource DisplayFont}" FontSize="17" Foreground="{DynamicResource AccentGradientBrush}" Text="OTIMIZADOR PC" />
+                            <TextBlock Style="{StaticResource Eyebrow}" Text="DESEMPENHO SEM ESFORÇO" />
+                        </StackPanel>
                     </Grid>
 
                     <ListBox DockPanel.Dock="Bottom" Style="{StaticResource NavList}" ItemContainerStyle="{StaticResource NavItemStyle}"
                              ItemTemplate="{StaticResource NavItemTemplate}" ItemsSource="{Binding FooterItems}" SelectedItem="{Binding SelectedFooterItem}" />
-                    <Separator DockPanel.Dock="Bottom" Margin="4,8" Opacity="0.4" />
+                    <Border DockPanel.Dock="Bottom" Height="1" Margin="8,10" Background="{DynamicResource CardStrokeColorDefaultBrush}" />
 
                     <ListBox Style="{StaticResource NavList}" ItemContainerStyle="{StaticResource NavItemStyle}"
-                             ItemTemplate="{StaticResource NavItemTemplate}" ItemsSource="{Binding MainItems}" SelectedItem="{Binding SelectedMainItem}" />
+                             ItemTemplate="{StaticResource NavItemTemplate}" ItemsSource="{Binding Source={StaticResource GroupedNav}}" SelectedItem="{Binding SelectedMainItem}">
+                        <ListBox.GroupStyle>
+                            <GroupStyle>
+                                <GroupStyle.HeaderTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Style="{StaticResource Eyebrow}" Margin="14,12,0,4" Text="{Binding Name}"
+                                                   Visibility="{Binding DataContext.IsCompact, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InvBoolVis}}" />
+                                    </DataTemplate>
+                                </GroupStyle.HeaderTemplate>
+                            </GroupStyle>
+                        </ListBox.GroupStyle>
+                    </ListBox>
                 </DockPanel>
             </Border>
 
             <!-- Conteúdo -->
             <Border x:Name="ContentHost" Grid.Column="1" CornerRadius="10,0,0,0" BorderThickness="1,1,0,0"
                     Background="{DynamicResource LayerFillColorDefaultBrush}" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
-                <Grid x:Name="ScaleHost">
+                <Grid x:Name="ScaleHost" ClipToBounds="True">
                     <Grid.LayoutTransform>
                         <ScaleTransform x:Name="UiScale" ScaleX="1" ScaleY="1" />
                     </Grid.LayoutTransform>
+                    <!-- Luzes suaves de fundo -->
+                    <Border Background="{DynamicResource BackgroundGlowBrush}" IsHitTestVisible="False" />
+                    <Border Background="{DynamicResource BackgroundGlow2Brush}" IsHitTestVisible="False" />
                     <c:AnimatedContentControl x:Name="PageHost" Content="{Binding CurrentPage}" Focusable="False" />
                 </Grid>
             </Border>
