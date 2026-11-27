@@ -19,6 +19,7 @@
             <conv:BoolToVisibilityConverter x:Key="BoolVis" />
             <conv:BoolToVisibilityConverter x:Key="InvBoolVis" Invert="True" />
             <conv:NullToVisibilityConverter x:Key="NullVis" />
+            <conv:NullToVisibilityConverter x:Key="NullVisInv" Invert="True" />
             <conv:LevelToBrushConverter x:Key="LevelBrush" />
             <conv:InverseBoolConverter x:Key="InvBool" />
             <conv:EnumToVisibilityConverter x:Key="EnumVis" />
@@ -360,8 +361,10 @@
                     <WrapPanel>
                         <RadioButton Style="{StaticResource SegmentButton}" Padding="14,5" GroupName="Baixo" Content="Maiores arquivos" IsChecked="{Binding BottomTab, Converter={StaticResource EnumEq}, ConverterParameter=0}" />
                         <RadioButton Style="{StaticResource SegmentButton}" Padding="14,5" GroupName="Baixo" Content="Tipos de arquivo" IsChecked="{Binding BottomTab, Converter={StaticResource EnumEq}, ConverterParameter=1}" />
+                        <RadioButton Style="{StaticResource SegmentButton}" Padding="14,5" GroupName="Baixo" Content="Duplicados" IsChecked="{Binding BottomTab, Converter={StaticResource EnumEq}, ConverterParameter=2}" />
                     </WrapPanel>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                Visibility="{Binding BottomTab, Converter={StaticResource EnumVis}, ConverterParameter=0|1}">
                         <ui:Button Margin="0,0,6,0" Padding="10,5" Content="Explorador" Icon="{ui:SymbolIcon Open24}" Command="{Binding ShowInExplorerCommand}" CommandParameter="{Binding SelectedRow}"
                                    ToolTip="Mostrar a pasta selecionada no Explorador" />
                         <ui:Button Margin="0,0,6,0" Padding="10,5" Content="Mover…" Icon="{ui:SymbolIcon ArrowMove24}" Command="{Binding MoveCommand}" CommandParameter="{Binding SelectedRow}"
@@ -434,6 +437,116 @@
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
+
+                    <!-- Duplicados -->
+                    <DockPanel Visibility="{Binding BottomTab, Converter={StaticResource EnumVis}, ConverterParameter=2}">
+                        <Grid DockPanel.Dock="Top" Margin="2,0,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <ComboBox Width="170" Margin="0,0,8,0" ItemsSource="{Binding DuplicateMinSizes}" SelectedItem="{Binding DuplicateMinSize}"
+                                          IsEnabled="{Binding IsFindingDuplicates, Converter={StaticResource InvBool}}" AutomationProperties.Name="Tamanho mínimo" />
+                                <Button Style="{StaticResource GlowButton}" Padding="14,7" Margin="0,0,8,0" Command="{Binding FindDuplicatesCommand}"
+                                        Visibility="{Binding IsFindingDuplicates, Converter={StaticResource InvBoolVis}}" AutomationProperties.Name="Procurar duplicados">
+                                    <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="DocumentCopy24" Foreground="White" Margin="0,0,6,0" /><TextBlock Text="Procurar duplicados" /></StackPanel>
+                                </Button>
+                                <ui:Button Margin="0,0,8,0" Content="Cancelar" Icon="{ui:SymbolIcon Stop24}" Command="{Binding CancelDuplicatesCommand}"
+                                           Visibility="{Binding IsFindingDuplicates, Converter={StaticResource BoolVis}}" />
+                                <TextBlock Style="{StaticResource CaptionText}" VerticalAlignment="Center" MaxWidth="420" TextTrimming="CharacterEllipsis"
+                                           Text="{Binding DuplicateSearchRoot, StringFormat=em {0}}" ToolTip="Abra outra pasta no mapa para procurar só nela" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Visibility="{Binding HasDuplicates, Converter={StaticResource BoolVis}}">
+                                <ui:Button Margin="0,0,6,0" Padding="10,5" Content="Marcar sugeridas" Command="{Binding CheckSuggestedDuplicatesCommand}"
+                                           ToolTip="Marca todas as cópias, mantendo o provável original de cada grupo" />
+                                <ui:Button Margin="0,0,6,0" Padding="10,5" Content="Desmarcar" Command="{Binding UncheckAllDuplicatesCommand}" />
+                                <ui:Button Padding="10,5" Appearance="Danger" Icon="{ui:SymbolIcon Delete24}" Command="{Binding RecycleDuplicatesCommand}"
+                                           AutomationProperties.Name="Enviar cópias para a Lixeira">
+                                    <TextBlock>
+                                        <Run Text="Lixeira:" />
+                                        <Run Text="{Binding DuplicatesCheckedSize, Converter={StaticResource Bytes}, Mode=OneWay}" />
+                                    </TextBlock>
+                                </ui:Button>
+                            </StackPanel>
+                        </Grid>
+                        <StackPanel DockPanel.Dock="Top" Margin="2,0,0,6">
+                            <ProgressBar Style="{StaticResource ThinProgress}" Maximum="1" Value="{Binding DuplicateProgress, Mode=OneWay}"
+                                         IsIndeterminate="{Binding DuplicateProgressKnown, Converter={StaticResource InvBool}}"
+                                         Visibility="{Binding IsFindingDuplicates, Converter={StaticResource BoolVis}}" Margin="0,0,0,4" />
+                            <TextBlock Style="{StaticResource CaptionText}" Text="{Binding DuplicateStatus}" TextWrapping="Wrap"
+                                       Visibility="{Binding DuplicateStatus, Converter={StaticResource NullVis}}" />
+                            <TextBlock Style="{StaticResource CaptionText}" TextWrapping="Wrap" Visibility="{Binding DuplicateStatus, Converter={StaticResource NullVisInv}}"
+                                       Text="Compara o conteúdo dos arquivos (não só o nome): primeiro o tamanho, depois o início e o fim, e por último o arquivo inteiro. Links físicos e pastas do Windows ficam de fora." />
+                        </StackPanel>
+
+                        <ListBox ItemsSource="{Binding Duplicates}" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch"
+                                 VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.ScrollUnit="Pixel" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 AutomationProperties.Name="Grupos de duplicados">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Margin" Value="0,0,0,6" />
+                                    <Setter Property="Template">
+                                        <Setter.Value><ControlTemplate TargetType="ListBoxItem"><ContentPresenter /></ControlTemplate></Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:DuplicateGroupRow}">
+                                    <Border Style="{StaticResource RowCard}" Margin="0" Padding="10,6">
+                                        <StackPanel>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <ui:SymbolIcon Symbol="DocumentCopy24" FontSize="15" Margin="0,0,8,0" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                                                    <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" MaxWidth="460" />
+                                                    <TextBlock Margin="10,0,0,0" Style="{StaticResource CaptionText}" VerticalAlignment="Center" Text="{Binding Summary}" />
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1" FontFamily="{StaticResource NumberFont}" FontWeight="SemiBold" Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                                                           Text="{Binding WastedText, StringFormat=+{0} em cópias}" />
+                                            </Grid>
+                                            <ItemsControl Margin="22,4,0,0" ItemsSource="{Binding Files}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate DataType="{x:Type vm:DuplicateFileRow}">
+                                                        <Grid Margin="0,1" Background="Transparent" Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                                                            <Grid.ContextMenu>
+                                                                <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
+                                                                    <MenuItem Header="Manter só esta cópia" Command="{Binding KeepOnlyCommand}"
+                                                                              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                                                    <MenuItem Header="Mostrar no Explorador" Command="{Binding ShowInExplorerCommand}"
+                                                                              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                                                </ContextMenu>
+                                                            </Grid.ContextMenu>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="22" />
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="120" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <CheckBox MinWidth="0" Padding="0" IsChecked="{Binding IsChecked}" ToolTip="Marcada = vai para a Lixeira"
+                                                                      AutomationProperties.Name="{Binding File.Path}" />
+                                                            <Image Grid.Column="1" Width="16" Height="16" Source="{Binding Icon}" />
+                                                            <TextBlock Grid.Column="2" Margin="4,0,8,0" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                                       Text="{Binding Folder}" TextTrimming="CharacterEllipsis" ToolTip="{Binding File.Path}" />
+                                                            <Border Grid.Column="3" Style="{StaticResource Tag}" Margin="0,0,8,0" BorderBrush="{DynamicResource SystemFillColorSuccessBrush}"
+                                                                    Visibility="{Binding SuggestedKeep, Converter={StaticResource BoolVis}}" ToolTip="Provável original: fica no lugar">
+                                                                <TextBlock FontSize="10" Foreground="{DynamicResource SystemFillColorSuccessBrush}" Text="original" />
+                                                            </Border>
+                                                            <TextBlock Grid.Column="4" VerticalAlignment="Center" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="{Binding DateText}" />
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
                 </Grid>
             </DockPanel>
         </Border>
