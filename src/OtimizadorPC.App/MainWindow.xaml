@@ -4,6 +4,7 @@
                  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 xmlns:tray="http://schemas.lepo.co/wpfui/2022/xaml/tray"
                  xmlns:vm="clr-namespace:OtimizadorPC.App.ViewModels"
                  xmlns:nav="clr-namespace:OtimizadorPC.App.Navigation"
                  xmlns:c="clr-namespace:OtimizadorPC.App.Controls"
@@ -52,6 +53,30 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
+
+        <!-- Ícone na bandeja (perto do relógio) -->
+        <tray:NotifyIcon x:Name="Tray" Grid.Row="0" FocusOnLeftClick="True" MenuOnRightClick="True" TooltipText="OtimizadorPC"
+                         Icon="pack://application:,,,/Assets/logo.png" LeftClick="OnTrayOpen">
+            <tray:NotifyIcon.Menu>
+                <ContextMenu>
+                    <MenuItem Header="Abrir o OtimizadorPC" FontWeight="SemiBold" Click="OnTrayOpen" />
+                    <Separator />
+                    <MenuItem x:Name="TrayGameMode" Header="Ligar Modo Jogo" Click="OnTrayGameMode">
+                        <MenuItem.Icon><ui:SymbolIcon Symbol="Games24" /></MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Limpeza rápida" Click="OnTrayCleanup">
+                        <MenuItem.Icon><ui:SymbolIcon Symbol="Broom24" /></MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Analisar disco (Dinosize)" Click="OnTrayDinosize">
+                        <MenuItem.Icon><ui:SymbolIcon Symbol="DataTreemap24" /></MenuItem.Icon>
+                    </MenuItem>
+                    <Separator />
+                    <MenuItem Header="Sair" Click="OnTrayExit">
+                        <MenuItem.Icon><ui:SymbolIcon Symbol="Power24" /></MenuItem.Icon>
+                    </MenuItem>
+                </ContextMenu>
+            </tray:NotifyIcon.Menu>
+        </tray:NotifyIcon>
 
         <ui:TitleBar Grid.Row="0" Title="" CloseWindowByDoubleClickOnIcon="True">
             <ui:TitleBar.Icon>

@@ -23,3 +23,5 @@ public partial class SuccessAnimation : AnimatedIcon { public SuccessAnimation()
 public partial class PackagesAnimation : AnimatedIcon { public PackagesAnimation() => InitializeComponent(); }
 
 public partial class SignalAnimation : AnimatedIcon { public SignalAnimation() => InitializeComponent(); }
+
+public partial class ControllerAnimation : AnimatedIcon { public ControllerAnimation() => InitializeComponent(); }

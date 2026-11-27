@@ -33,6 +33,7 @@ public sealed partial class MainViewModel : ObservableObject
             new NavItem { Group = "FERRAMENTAS", Key = "dinosize", Title = "Dinosize", Icon = SymbolRegular.DataTreemap24, ViewModelType = typeof(DinosizeViewModel) },
             new NavItem { Group = "FERRAMENTAS", Key = "programas", Title = "Programas", Icon = SymbolRegular.Apps24, ViewModelType = typeof(ProgramsViewModel) },
             new NavItem { Group = "FERRAMENTAS", Key = "rede", Title = "Rede e DNS", Icon = SymbolRegular.Globe24, ViewModelType = typeof(NetworkViewModel) },
+            new NavItem { Group = "DESEMPENHO", Key = "modojogo", Title = "Modo Jogo", Icon = SymbolRegular.Games24, ViewModelType = typeof(GameModeViewModel) },
             new NavItem { Group = "DESEMPENHO", Key = "overclock", Title = "Overclock", Icon = SymbolRegular.Rocket24, ViewModelType = typeof(OverclockViewModel) },
         ];
 

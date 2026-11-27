@@ -40,5 +40,20 @@ public sealed class AppSettings
     public decimal EnergyPricePerKwh { get; set; } = 0.85m;
     public double DailyGamingHours { get; set; } = 3;
 
+    // Modo Jogo
+    public bool GameModeCloseDispensable { get; set; } = true;
+    public bool GameModeMaxPerformancePlan { get; set; } = true;
+    public bool GameModeBoostGames { get; set; } = true;
+    public bool GameModeReopenClosed { get; set; }
+
+    // Bandeja e automação
+    public bool MinimizeToTray { get; set; } = true;
+    public bool AutoCleanupEnabled { get; set; }
+    public GameMode.CleanupFrequency AutoCleanupFrequency { get; set; } = GameMode.CleanupFrequency.Semanal;
+    public DayOfWeek AutoCleanupDay { get; set; } = DayOfWeek.Sunday;
+    public int AutoCleanupHour { get; set; } = 12;
+    public DateTime? LastAutoCleanup { get; set; }
+    public long LastAutoCleanupBytes { get; set; }
+
     public AppSettings Clone() => (AppSettings)MemberwiseClone();
 }

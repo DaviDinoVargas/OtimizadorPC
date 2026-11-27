@@ -33,13 +33,34 @@ public partial class App : Application
 
         DispatcherUnhandledException += OnUnhandledException;
 
-        _host = Host.CreateDefaultBuilder(e.Args)
+        // Os argumentos são do próprio programa (ex.: --limpeza-silenciosa), não configuração do host
+        _host = Host.CreateDefaultBuilder()
             .UseContentRoot(AppContext.BaseDirectory)
             .UseSerilog()
             .ConfigureServices(ConfigureServices)
             .Build();
 
         await _host.StartAsync();
+
+        // Chamado pela tarefa agendada: limpa sem abrir janela e sai
+        if (e.Args.Contains(IAutoCleanupScheduler.SilentArgument, StringComparer.OrdinalIgnoreCase))
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            Log.Information("Limpeza automática iniciada pela tarefa agendada");
+            try
+            {
+                await SilentCleanup.RunAsync(_host.Services.GetRequiredService<ICleanupService>(), _host.Services.GetRequiredService<ISettingsService>());
+            }
+            catch (Exception ex) { Log.Error(ex, "Falha na limpeza automática"); }
+            Shutdown();
+            return;
+        }
+
+        // A janela pode ir para a bandeja; o programa só fecha por "Sair" (ver MainWindow)
+        ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
+        // Se o programa fechou com o Modo Jogo ligado, devolve o plano de energia e as prioridades
+        _host.Services.GetRequiredService<GameModeService>().RecoverAfterCrash();
 
         var window = _host.Services.GetRequiredService<MainWindow>();
         _host.Services.GetRequiredService<ThemeService>().Initialize(window);
@@ -70,6 +91,7 @@ public partial class App : Application
         services.AddSingleton<IDuplicateScanner, OtimizadorPC.Infrastructure.DiskAnalysis.DuplicateScanner>();
         services.AddSingleton<IInstalledProgramsService, OtimizadorPC.Infrastructure.Programs.InstalledProgramsService>();
         services.AddSingleton<INetworkService, OtimizadorPC.Infrastructure.Network.NetworkService>();
+        services.AddSingleton<IAutoCleanupScheduler, AutoCleanupScheduler>();
         services.AddSingleton<IBenchmarkService, BenchmarkService>();
         services.AddSingleton<IBenchmarkHistory, BenchmarkHistory>();
         services.AddSingleton<ICpuStress, CpuStress>();
@@ -80,6 +102,7 @@ public partial class App : Application
         services.AddSingleton<ThemeService>();
         services.AddSingleton<SensorMonitor>();
         services.AddSingleton<SnapshotProvider>();
+        services.AddSingleton<GameModeService>();
 
         // Janela e páginas
         services.AddSingleton<MainWindow>();
@@ -92,6 +115,7 @@ public partial class App : Application
         services.AddSingleton<DinosizeViewModel>();
         services.AddSingleton<ProgramsViewModel>();
         services.AddSingleton<NetworkViewModel>();
+        services.AddSingleton<GameModeViewModel>();
         services.AddSingleton<OverclockViewModel>();
         services.AddSingleton<SettingsViewModel>();
     }
