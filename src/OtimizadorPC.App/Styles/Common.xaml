@@ -9,10 +9,41 @@
     <sys:Double x:Key="NavItemHeight">42</sys:Double>
     <sys:Double x:Key="CardSpacing">12</sys:Double>
 
+    <!-- Degradês padrão (a GamerPalette substitui conforme a cor de destaque escolhida) -->
+    <Color x:Key="AccentStartColor">#14B8A6</Color>
+    <Color x:Key="AccentEndColor">#8B5CF6</Color>
+    <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#14B8A6" Offset="0" />
+        <GradientStop Color="#8B5CF6" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="AccentGradientVerticalBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#14B8A6" Offset="0" />
+        <GradientStop Color="#8B5CF6" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="AccentGradientSoftBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#3A14B8A6" Offset="0" />
+        <GradientStop Color="#1A8B5CF6" Offset="1" />
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="AccentGlowBrush" Color="#5514B8A6" />
+    <LinearGradientBrush x:Key="HeroBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#4A14B8A6" Offset="0" />
+        <GradientStop Color="#308B5CF6" Offset="0.55" />
+        <GradientStop Color="#008B5CF6" Offset="1" />
+    </LinearGradientBrush>
+    <DropShadowEffect x:Key="HoverGlowEffect" ShadowDepth="0" BlurRadius="22" Opacity="0.4" Color="#14B8A6" />
+    <DropShadowEffect x:Key="AccentGlowEffect" ShadowDepth="0" BlurRadius="16" Opacity="0.55" Color="#14B8A6" />
+    <SolidColorBrush x:Key="SidebarBackgroundBrush" Color="Transparent" />
+    <SolidColorBrush x:Key="BackgroundGlowBrush" Color="Transparent" />
+    <SolidColorBrush x:Key="BackgroundGlow2Brush" Color="Transparent" />
+
+    <!-- Fontes -->
+    <FontFamily x:Key="DisplayFont">Bahnschrift SemiBold, Segoe UI Variable Display, Segoe UI</FontFamily>
+    <FontFamily x:Key="NumberFont">Bahnschrift, Segoe UI Variable Display, Segoe UI</FontFamily>
+
     <!-- Tipografia -->
     <Style x:Key="PageTitle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="28" />
-        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontFamily" Value="{StaticResource DisplayFont}" />
+        <Setter Property="FontSize" Value="30" />
         <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
     </Style>
     <Style x:Key="PageSubtitle" TargetType="TextBlock">
@@ -27,6 +58,11 @@
         <Setter Property="Margin" Value="0,0,0,4" />
         <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
     </Style>
+    <Style x:Key="Eyebrow" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource DisplayFont}" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Foreground" Value="{DynamicResource TextFillColorTertiaryBrush}" />
+    </Style>
     <Style x:Key="BodyText" TargetType="TextBlock">
         <Setter Property="FontSize" Value="14" />
         <Setter Property="TextWrapping" Value="Wrap" />
@@ -38,14 +74,17 @@
         <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
     </Style>
     <Style x:Key="BigNumber" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="30" />
-        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontFamily" Value="{StaticResource DisplayFont}" />
+        <Setter Property="FontSize" Value="34" />
         <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+    </Style>
+    <Style x:Key="GradientNumber" TargetType="TextBlock" BasedOn="{StaticResource BigNumber}">
+        <Setter Property="Foreground" Value="{DynamicResource AccentGradientBrush}" />
     </Style>
 
     <!-- Cartões -->
     <Style x:Key="SectionCard" TargetType="Border">
-        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="CornerRadius" Value="14" />
         <Setter Property="Padding" Value="{DynamicResource CardPadding}" />
         <Setter Property="Margin" Value="{DynamicResource CardMargin}" />
         <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
@@ -53,33 +92,24 @@
         <Setter Property="BorderThickness" Value="1" />
     </Style>
 
-    <!-- Cartão com leve elevação ao passar o mouse -->
+    <!-- Cartão que acende a borda e ganha brilho ao passar o mouse -->
     <Style x:Key="HoverCard" TargetType="Border" BasedOn="{StaticResource SectionCard}">
-        <Setter Property="RenderTransform">
-            <Setter.Value>
-                <TranslateTransform />
-            </Setter.Value>
-        </Setter>
         <Style.Triggers>
-            <EventTrigger RoutedEvent="MouseEnter">
-                <BeginStoryboard>
-                    <Storyboard>
-                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" To="-3" Duration="0:0:0.18">
-                            <DoubleAnimation.EasingFunction>
-                                <CubicEase EasingMode="EaseOut" />
-                            </DoubleAnimation.EasingFunction>
-                        </DoubleAnimation>
-                    </Storyboard>
-                </BeginStoryboard>
-            </EventTrigger>
-            <EventTrigger RoutedEvent="MouseLeave">
-                <BeginStoryboard>
-                    <Storyboard>
-                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" To="0" Duration="0:0:0.22" />
-                    </Storyboard>
-                </BeginStoryboard>
-            </EventTrigger>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource AccentGradientBrush}" />
+                <Setter Property="Effect" Value="{DynamicResource HoverGlowEffect}" />
+            </Trigger>
         </Style.Triggers>
+    </Style>
+
+    <!-- Quadrado com degradê para ícones (cartões de métricas) -->
+    <Style x:Key="IconTile" TargetType="Border">
+        <Setter Property="Width" Value="40" />
+        <Setter Property="Height" Value="40" />
+        <Setter Property="CornerRadius" Value="11" />
+        <Setter Property="Background" Value="{DynamicResource AccentGradientSoftBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentGlowBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
     </Style>
 
     <!-- Botões segmentados (escolha única) -->
@@ -87,25 +117,40 @@
         <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
         <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
-        <Setter Property="Padding" Value="14,7" />
+        <Setter Property="Padding" Value="16,7" />
         <Setter Property="Margin" Value="0,0,6,6" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FontSize" Value="13" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="Bd" CornerRadius="6" Padding="{TemplateBinding Padding}"
-                            Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1">
-                        <ContentPresenter x:Name="Cp" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
+                    <Grid>
+                        <Border x:Name="Bd" CornerRadius="17" Padding="{TemplateBinding Padding}"
+                                Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" />
+                        <Border x:Name="Sel" CornerRadius="17" Background="{DynamicResource AccentGradientBrush}" Opacity="0" Effect="{DynamicResource AccentGlowEffect}" />
+
+                        <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}" />
-                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
-                            <Setter Property="Foreground" Value="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
+                            <Setter Property="Foreground" Value="White" />
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Sel" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.18" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Sel" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.18" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.45" />
@@ -118,8 +163,8 @@
 
     <!-- Amostra de cor de destaque -->
     <Style x:Key="SwatchButton" TargetType="RadioButton">
-        <Setter Property="Width" Value="34" />
-        <Setter Property="Height" Value="34" />
+        <Setter Property="Width" Value="36" />
+        <Setter Property="Height" Value="36" />
         <Setter Property="Margin" Value="0,0,8,8" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Template">
@@ -159,10 +204,10 @@
         </Setter>
     </Style>
 
-    <!-- Barra de proporção simples (usada em listas de tamanho/uso) -->
+    <!-- Barra de proporção com degradê -->
     <Style x:Key="ThinProgress" TargetType="ProgressBar">
         <Setter Property="Height" Value="6" />
-        <Setter Property="Foreground" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource AccentGradientBrush}" />
         <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Template">
@@ -173,6 +218,38 @@
                         <Border x:Name="PART_Track" />
                         <Border x:Name="PART_Indicator" HorizontalAlignment="Left" Background="{TemplateBinding Foreground}" CornerRadius="3" />
                     </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Botão de ação grande com degradê (ações principais das páginas) -->
+    <Style x:Key="GlowButton" TargetType="Button">
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Padding" Value="22,11" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="Bd" CornerRadius="10" Background="{DynamicResource AccentGradientBrush}" Effect="{DynamicResource AccentGlowEffect}" />
+
+                        <Border x:Name="Shine" CornerRadius="10" Background="White" Opacity="0" />
+                        <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Shine" Property="Opacity" Value="0.08" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Shine" Property="Opacity" Value="0.16" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.45" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
