@@ -91,13 +91,25 @@ public partial class App : Application
         services.AddSingleton<SettingsViewModel>();
     }
 
+    private bool _showingError;
+    private string? _lastError;
+
     private void OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
-        Log.Error(e.Exception, "Erro não tratado na interface");
-        System.Windows.MessageBox.Show(
-            "Ocorreu um erro inesperado:\n\n" + e.Exception.Message + "\n\nOs detalhes foram salvos no log.",
-            "OtimizadorPC", MessageBoxButton.OK, MessageBoxImage.Warning);
         e.Handled = true;
+        // A caixa de mensagem processa a fila de mensagens: um erro de layout se repetiria
+        // dentro dela e abriria caixas em cascata. Mostra só uma por vez e não repete a mesma.
+        if (_showingError || e.Exception.Message == _lastError) return;
+        Log.Error(e.Exception, "Erro não tratado na interface");
+        _showingError = true;
+        _lastError = e.Exception.Message;
+        try
+        {
+            System.Windows.MessageBox.Show(
+                "Ocorreu um erro inesperado:\n\n" + e.Exception.Message + "\n\nOs detalhes foram salvos no log.",
+                "OtimizadorPC", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        finally { _showingError = false; }
     }
 
     protected override async void OnExit(ExitEventArgs e)

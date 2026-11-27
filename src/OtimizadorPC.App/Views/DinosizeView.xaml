@@ -21,11 +21,11 @@
             <conv:NullToVisibilityConverter x:Key="NullVis" />
             <conv:LevelToBrushConverter x:Key="LevelBrush" />
             <conv:InverseBoolConverter x:Key="InvBool" />
-            <conv:EnumToVisibilityConverter x:Key="EnumVisInt" />
+            <conv:EnumToVisibilityConverter x:Key="EnumVis" />
+            <conv:BytesConverter x:Key="Bytes" />
 
-            <!-- Menu de contexto compartilhado (pastas e arquivos) -->
-            <ContextMenu x:Key="ItemMenu" x:Shared="False" DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
-                <MenuItem Header="Abrir" Command="{Binding OpenRowCommand}"
+            <ContextMenu x:Key="RowMenu" x:Shared="False" DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
+                <MenuItem Header="Abrir / fechar pasta" Command="{Binding ToggleExpandCommand}"
                           CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
                 <MenuItem Header="Mostrar no Explorador" Command="{Binding ShowInExplorerCommand}"
                           CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
@@ -35,207 +35,351 @@
                 <MenuItem Header="Enviar para a Lixeira" Command="{Binding RecycleCommand}"
                           CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
             </ContextMenu>
+
+            <!-- Cabeçalho de coluna clicável (ordena) -->
+            <Style x:Key="ColumnHeader" TargetType="GridViewColumnHeader">
+                <Setter Property="HorizontalContentAlignment" Value="Left" />
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="GridViewColumnHeader">
+                            <Border x:Name="Bd" Padding="8,6" Background="Transparent" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" />
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <ScrollViewer Padding="{DynamicResource PagePadding}">
-        <StackPanel>
-            <c:PageHeader Title="Dinosize" Subtitle="Descubra o que ocupa espaço nos seus discos e libere ou mova o que quiser">
-                <c:PageHeader.Animation><anim:TilesAnimation /></c:PageHeader.Animation>
-                <c:PageHeader.Actions>
-                    <ui:Button Content="Escolher pasta…" Icon="{ui:SymbolIcon FolderOpen24}" Command="{Binding PickFolderCommand}"
-                               IsEnabled="{Binding IsScanning, Converter={StaticResource InvBool}}" />
-                </c:PageHeader.Actions>
-            </c:PageHeader>
+    <Grid Margin="{DynamicResource PagePadding}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" MinHeight="220" />
+            <RowDefinition Height="8" />
+            <RowDefinition Height="210" MinHeight="110" />
+        </Grid.RowDefinitions>
 
-            <!-- Onde analisar -->
-            <Border Style="{StaticResource SectionCard}">
-                <StackPanel>
-                    <TextBlock Style="{StaticResource SectionTitle}" Text="Escolha um disco" />
-                    <ItemsControl ItemsSource="{Binding Drives}" Margin="0,6,0,6" IsEnabled="{Binding IsScanning, Converter={StaticResource InvBool}}">
-                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="{x:Type vm:DriveCard}">
-                                <ui:Button Width="230" Margin="0,0,10,10" Padding="14,10" HorizontalContentAlignment="Stretch"
-                                           Command="{Binding DataContext.ScanDriveCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
-                                           AutomationProperties.Name="{Binding Title}">
-                                    <StackPanel>
-                                        <StackPanel Orientation="Horizontal">
-                                            <ui:SymbolIcon Symbol="Storage24" FontSize="18" Margin="0,0,8,0" />
-                                            <TextBlock FontWeight="SemiBold" Text="{Binding Title}" TextTrimming="CharacterEllipsis" MaxWidth="130" />
-                                            <Border Style="{StaticResource Tag}" Margin="8,0,0,0">
-                                                <TextBlock FontSize="10" Text="{Binding Media}" />
-                                            </Border>
-                                        </StackPanel>
-                                        <ProgressBar Style="{StaticResource ThinProgress}" Margin="0,8,0,6" Maximum="1" Value="{Binding UsedFraction, Mode=OneWay}"
-                                                     Foreground="{Binding UsedFraction, Converter={StaticResource LevelBrush}}" />
-                                        <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding Subtitle}" />
-                                    </StackPanel>
-                                </ui:Button>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-
-                    <TextBlock Style="{StaticResource CaptionText}" Margin="0,0,0,6" Text="Modo de análise" />
-                    <WrapPanel>
-                        <RadioButton Style="{StaticResource SegmentButton}" GroupName="Modo" Content="Automático" IsChecked="{Binding Mode, Converter={StaticResource EnumEq}, ConverterParameter=Automatico}" />
-                        <RadioButton Style="{StaticResource SegmentButton}" GroupName="Modo" Content="Rápido" IsChecked="{Binding Mode, Converter={StaticResource EnumEq}, ConverterParameter=Rapido}" />
-                        <RadioButton Style="{StaticResource SegmentButton}" GroupName="Modo" Content="Ultra (MFT)" IsChecked="{Binding Mode, Converter={StaticResource EnumEq}, ConverterParameter=Mft}" />
-                    </WrapPanel>
-                    <TextBlock Style="{StaticResource CaptionText}" Text="{Binding ModeHint}" />
+        <!-- ================= Barra de ferramentas ================= -->
+        <Border Style="{StaticResource SectionCard}" Padding="14,10" Margin="0,0,0,10" Background="{DynamicResource HeroBrush}" BorderBrush="{DynamicResource AccentGlowBrush}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border Style="{StaticResource IconTile}" Width="44" Height="44" VerticalAlignment="Center">
+                    <ui:SymbolIcon Symbol="DataTreemap24" FontSize="22" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                </Border>
+                <StackPanel Grid.Column="1" Margin="10,0,18,0" VerticalAlignment="Center">
+                    <TextBlock FontFamily="{StaticResource DisplayFont}" FontSize="22" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="Dinosize" />
+                    <TextBlock Style="{StaticResource Eyebrow}" Text="ANÁLISE DE DISCO" />
                 </StackPanel>
+                <WrapPanel Grid.Column="2" VerticalAlignment="Center">
+                    <ComboBox Width="340" Margin="0,2,8,2" ItemsSource="{Binding Drives}" SelectedItem="{Binding SelectedDrive}" IsEnabled="{Binding IsScanning, Converter={StaticResource InvBool}}"
+                              AutomationProperties.Name="Disco" ToolTip="Disco para analisar" />
+                    <ComboBox Width="150" Margin="0,2,8,2" ItemsSource="{Binding Modes}" SelectedItem="{Binding Mode}" IsEnabled="{Binding IsScanning, Converter={StaticResource InvBool}}"
+                              AutomationProperties.Name="Modo de análise" ToolTip="{Binding ModeHint}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock>
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="Automático" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding}" Value="Rapido"><Setter Property="Text" Value="Rápido" /></DataTrigger>
+                                                <DataTrigger Binding="{Binding}" Value="Mft"><Setter Property="Text" Value="Ultra (MFT)" /></DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Button Style="{StaticResource GlowButton}" Padding="18,8" Margin="0,2,8,2" Command="{Binding ScanSelectedCommand}"
+                            Visibility="{Binding IsScanning, Converter={StaticResource InvBoolVis}}" AutomationProperties.Name="Analisar">
+                        <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Play24" Foreground="White" Margin="0,0,6,0" /><TextBlock Text="Analisar" /></StackPanel>
+                    </Button>
+                    <ui:Button Margin="0,2,8,2" Content="Cancelar" Icon="{ui:SymbolIcon Stop24}" Command="{Binding CancelCommand}" Visibility="{Binding IsScanning, Converter={StaticResource BoolVis}}" />
+                    <ui:Button Margin="0,2,8,2" Content="Pasta…" Icon="{ui:SymbolIcon FolderOpen24}" Command="{Binding PickFolderCommand}"
+                               IsEnabled="{Binding IsScanning, Converter={StaticResource InvBool}}" ToolTip="Analisar uma pasta específica" />
+                </WrapPanel>
+                <ui:TextBox Grid.Column="3" Width="220" VerticalAlignment="Center" PlaceholderText="Filtrar pastas…" Icon="{ui:SymbolIcon Search24}"
+                            Text="{Binding Filter, UpdateSourceTrigger=PropertyChanged, Delay=300}" IsEnabled="{Binding HasResult}" />
+            </Grid>
+        </Border>
+
+        <!-- ================= Status ================= -->
+        <StackPanel Grid.Row="1" Margin="2,0,0,8">
+            <Grid Visibility="{Binding IsScanning, Converter={StaticResource BoolVis}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal">
+                    <c:CountUpText FontFamily="{StaticResource NumberFont}" FontSize="16" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Format="Inteiro" Suffix=" arquivos" Value="{Binding ProgressFiles}" />
+                    <TextBlock Text="  ·  " Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    <c:CountUpText FontFamily="{StaticResource NumberFont}" FontSize="16" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Format="Bytes" Value="{Binding ProgressBytes}" />
+                    <TextBlock Text="{Binding Elapsed, StringFormat=  ·  {0}}" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+                <TextBlock Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center" Style="{StaticResource CaptionText}" Text="{Binding ProgressPath}"
+                           TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+            </Grid>
+            <ProgressBar IsIndeterminate="True" Height="3" Margin="0,6,0,0" Visibility="{Binding IsScanning, Converter={StaticResource BoolVis}}" />
+            <TextBlock Style="{StaticResource CaptionText}" Text="{Binding ResultSummary}" Visibility="{Binding HasResult, Converter={StaticResource BoolVis}}" />
+            <TextBlock Style="{StaticResource CaptionText}" Foreground="{DynamicResource SystemFillColorCautionBrush}" Text="{Binding ResultNote}"
+                       Visibility="{Binding ResultNote, Converter={StaticResource NullVis}}" />
+            <TextBlock Style="{StaticResource CaptionText}" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" Text="{Binding OperationMessage}"
+                       Visibility="{Binding OperationMessage, Converter={StaticResource NullVis}}" />
+        </StackPanel>
+
+        <!-- ================= Tela inicial: escolha um disco ================= -->
+        <Border Grid.Row="2" Grid.RowSpan="3" Style="{StaticResource SectionCard}" Margin="0" Visibility="{Binding ShowEmptyState, Converter={StaticResource BoolVis}}">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="900">
+                <anim:TilesAnimation HorizontalAlignment="Center">
+                    <anim:TilesAnimation.LayoutTransform><ScaleTransform ScaleX="1.4" ScaleY="1.4" /></anim:TilesAnimation.LayoutTransform>
+                </anim:TilesAnimation>
+                <TextBlock HorizontalAlignment="Center" Margin="0,12,0,4" FontFamily="{StaticResource DisplayFont}" FontSize="24" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                           Text="O que está ocupando seu disco?" />
+                <TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionText}" Margin="0,0,0,18" Text="Clique em um disco para analisar, ou use &quot;Pasta…&quot; para uma pasta específica." />
+                <ItemsControl ItemsSource="{Binding Drives}" HorizontalAlignment="Center">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel HorizontalAlignment="Center" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:DriveCard}">
+                            <Button Width="200" Margin="6" Cursor="Hand" Command="{Binding DataContext.ScanDriveCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}" AutomationProperties.Name="{Binding Title}">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="Bd" CornerRadius="14" Padding="16,14" Background="{DynamicResource ControlFillColorDefaultBrush}"
+                                                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                                            <ContentPresenter />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentGradientBrush}" />
+                                                <Setter TargetName="Bd" Property="Effect" Value="{DynamicResource HoverGlowEffect}" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border Style="{StaticResource IconTile}" Width="32" Height="32"><ui:SymbolIcon Symbol="Storage24" FontSize="16" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" /></Border>
+                                        <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding Title}" TextTrimming="CharacterEllipsis" MaxWidth="120" />
+                                            <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="{Binding Media}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <ProgressBar Style="{StaticResource ThinProgress}" Margin="0,12,0,6" Maximum="1" Value="{Binding UsedFraction, Mode=OneWay}"
+                                                 Foreground="{Binding UsedFraction, Converter={StaticResource LevelBrush}}" />
+                                    <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding Subtitle}" />
+                                </StackPanel>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+
+        <!-- ================= Árvore + treemap ================= -->
+        <Grid Grid.Row="2" Visibility="{Binding HasResult, Converter={StaticResource BoolVis}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*" MinWidth="420" />
+                <ColumnDefinition Width="8" />
+                <ColumnDefinition Width="2*" MinWidth="240" />
+            </Grid.ColumnDefinitions>
+
+            <Border Style="{StaticResource SectionCard}" Margin="0" Padding="0">
+                <ListView x:Name="Tree" ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}" Background="Transparent" BorderThickness="0"
+                          VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" VirtualizingPanel.ScrollUnit="Pixel"
+                          KeyDown="OnTreeKeyDown" AutomationProperties.Name="Árvore de pastas">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="AutomationProperties.Name" Value="{Binding Name}" />
+                            <Setter Property="Margin" Value="4,1" />
+                            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListViewItem">
+                                        <Grid>
+                                            <Border x:Name="Bg" CornerRadius="8" Background="Transparent" />
+                                            <Border x:Name="Sel" CornerRadius="8" Opacity="0" Background="{DynamicResource AccentGradientSoftBrush}"
+                                                    BorderBrush="{DynamicResource AccentGlowBrush}" BorderThickness="1" />
+                                            <GridViewRowPresenter Margin="0,3" Columns="{TemplateBinding GridView.ColumnCollection}" Content="{TemplateBinding Content}"
+                                                                  VerticalAlignment="Center" />
+                                        </Grid>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="Sel" Property="Opacity" Value="1" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                            <Setter Property="ContextMenu" Value="{StaticResource RowMenu}" />
+                            <EventSetter Event="MouseDoubleClick" Handler="OnRowDoubleClick" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.View>
+                        <GridView ColumnHeaderContainerStyle="{StaticResource ColumnHeader}">
+                            <GridViewColumn Width="215">
+                                <GridViewColumnHeader Content="Nome" Command="{Binding SortByCommand}" CommandParameter="Nome" />
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate DataType="{x:Type vm:TreeRow}">
+                                        <StackPanel Orientation="Horizontal" Margin="{Binding IndentMargin}">
+                                            <Button Width="18" Height="18" Padding="0" Background="Transparent" BorderThickness="0" Cursor="Hand" Focusable="False"
+                                                    Command="{Binding DataContext.ToggleExpandCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                                                    Visibility="{Binding CanExpand, Converter={StaticResource BoolVis}}">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button"><ContentPresenter /></ControlTemplate>
+                                                </Button.Template>
+                                                <ui:SymbolIcon FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                                                    <ui:SymbolIcon.Style>
+                                                        <Style TargetType="ui:SymbolIcon">
+                                                            <Setter Property="Symbol" Value="ChevronRight24" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsExpanded}" Value="True"><Setter Property="Symbol" Value="ChevronDown24" /></DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </ui:SymbolIcon.Style>
+                                                </ui:SymbolIcon>
+                                            </Button>
+                                            <Border Width="18" Visibility="{Binding CanExpand, Converter={StaticResource InvBoolVis}}" />
+                                            <Border Width="4" Height="16" CornerRadius="2" Margin="2,0,6,0" Background="{Binding ColorBrush}" />
+                                            <ui:SymbolIcon FontSize="15" Margin="0,0,6,0" Foreground="{DynamicResource SystemFillColorCautionBrush}">
+                                                <ui:SymbolIcon.Style>
+                                                    <Style TargetType="ui:SymbolIcon">
+                                                        <Setter Property="Symbol" Value="Document24" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsFolder}" Value="True"><Setter Property="Symbol" Value="Folder24" /></DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </ui:SymbolIcon.Style>
+                                            </ui:SymbolIcon>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock FontSize="10" Text="{Binding PathHint}" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                           Visibility="{Binding PathHint, Converter={StaticResource NullVis}}" TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Width="80">
+                                <GridViewColumnHeader Content="Tamanho" Command="{Binding SortByCommand}" CommandParameter="Tamanho" />
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate DataType="{x:Type vm:TreeRow}">
+                                        <TextBlock HorizontalAlignment="Right" FontFamily="{StaticResource NumberFont}" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding SizeText}" />
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Width="100">
+                                <GridViewColumnHeader Content="% da pasta" />
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate DataType="{x:Type vm:TreeRow}">
+                                        <Grid Width="86">
+                                            <ProgressBar Style="{StaticResource ThinProgress}" Height="14" Maximum="1" Value="{Binding Fraction, Mode=OneWay}" Foreground="{Binding ColorBrush}" Opacity="0.85" />
+                                            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10" Foreground="White" Text="{Binding PercentText}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Width="72">
+                                <GridViewColumnHeader Content="Arquivos" Command="{Binding SortByCommand}" CommandParameter="Arquivos" />
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate DataType="{x:Type vm:TreeRow}">
+                                        <TextBlock HorizontalAlignment="Right" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding FilesText}" />
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Width="84">
+                                <GridViewColumnHeader Content="Modificado" Command="{Binding SortByCommand}" CommandParameter="Modificado" />
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate DataType="{x:Type vm:TreeRow}">
+                                        <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding ModifiedText}" />
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
             </Border>
 
-            <!-- Analisando -->
-            <Border Style="{StaticResource SectionCard}" Visibility="{Binding IsScanning, Converter={StaticResource BoolVis}}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <anim:TilesAnimation VerticalAlignment="Center" />
-                    <StackPanel Grid.Column="1" Margin="16,0" VerticalAlignment="Center">
-                        <TextBlock Style="{StaticResource SectionTitle}" Text="{Binding SelectedPath, StringFormat=Analisando {0}}" />
-                        <StackPanel Orientation="Horizontal">
-                            <c:CountUpText Style="{StaticResource BigNumber}" FontSize="24" Format="Inteiro" Suffix=" arquivos" Value="{Binding ProgressFiles}" />
-                            <TextBlock Text="  ·  " Style="{StaticResource BigNumber}" FontSize="24" />
-                            <c:CountUpText Style="{StaticResource BigNumber}" FontSize="24" Format="Bytes" Value="{Binding ProgressBytes}" />
-                        </StackPanel>
-                        <TextBlock Style="{StaticResource CaptionText}" Text="{Binding ProgressPath}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
-                        <TextBlock Style="{StaticResource CaptionText}" Text="{Binding Elapsed}" />
-                    </StackPanel>
-                    <ui:Button Grid.Column="2" VerticalAlignment="Center" Content="Cancelar" Command="{Binding CancelCommand}" />
-                </Grid>
-            </Border>
+            <GridSplitter Grid.Column="1" Width="8" HorizontalAlignment="Stretch" Background="Transparent" Cursor="SizeWE" ResizeBehavior="PreviousAndNext" />
 
-            <ui:InfoBar Margin="0,0,0,12" IsOpen="True" IsClosable="False" Title="Aviso" Severity="Warning" Message="{Binding ResultNote}"
-                        Visibility="{Binding ResultNote, Converter={StaticResource NullVis}}" />
-            <ui:InfoBar Margin="0,0,0,12" IsOpen="True" IsClosable="False" Title="Dinosize" Severity="Informational" Message="{Binding OperationMessage}"
-                        Visibility="{Binding OperationMessage, Converter={StaticResource NullVis}}" />
-
-            <!-- Resultado -->
-            <StackPanel Visibility="{Binding HasResult, Converter={StaticResource BoolVis}}">
-                <StackPanel.Style>
-                    <Style TargetType="StackPanel">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsScanning}" Value="True">
-                                <Setter Property="Opacity" Value="0.35" />
-                                <Setter Property="IsEnabled" Value="False" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </StackPanel.Style>
-
-                <TextBlock Style="{StaticResource CaptionText}" Margin="2,0,0,8" Text="{Binding ResultSummary}" />
-
-                <!-- Navegação -->
-                <Border Style="{StaticResource SectionCard}" Padding="10,6">
-                    <Grid>
+            <Border Grid.Column="2" Style="{StaticResource SectionCard}" Margin="0" Padding="8">
+                <DockPanel>
+                    <Grid DockPanel.Dock="Top" Margin="2,0,2,6">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <ui:Button Icon="{ui:SymbolIcon ArrowUp24}" ToolTip="Subir um nível" Command="{Binding GoUpCommand}" Margin="0,0,8,0" AutomationProperties.Name="Subir um nível" />
-                        <ItemsControl Grid.Column="1" ItemsSource="{Binding Breadcrumb}" VerticalAlignment="Center">
+                        <ui:Button Padding="6" Icon="{ui:SymbolIcon ArrowUp24}" ToolTip="Subir um nível" Command="{Binding GoUpCommand}" AutomationProperties.Name="Subir um nível" />
+                        <ItemsControl Grid.Column="1" Margin="6,0,0,0" ItemsSource="{Binding Breadcrumb}" VerticalAlignment="Center">
                             <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate DataType="{x:Type da:DirNode}">
                                     <StackPanel Orientation="Horizontal">
-                                        <ui:HyperlinkButton Padding="4,2" Content="{Binding Name}"
-                                                            Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
-                                        <ui:SymbolIcon Symbol="ChevronRight24" FontSize="12" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                                        <ui:HyperlinkButton Padding="3,1" FontSize="12" Content="{Binding Name}"
+                                                            Command="{Binding DataContext.RevealCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                        <ui:SymbolIcon Symbol="ChevronRight24" FontSize="10" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
                                     </StackPanel>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                        <StackPanel Grid.Column="2" Orientation="Horizontal">
-                            <TextBlock Style="{StaticResource CaptionText}" VerticalAlignment="Center" Margin="0,0,10,0" Text="{Binding CurrentSize}" />
-                            <ui:Button Icon="{ui:SymbolIcon ArrowClockwise24}" ToolTip="Analisar de novo" Command="{Binding RescanCommand}" AutomationProperties.Name="Analisar de novo" />
-                        </StackPanel>
                     </Grid>
-                </Border>
-
-                <!-- Lista + mapa -->
-                <Grid Height="470" Margin="0,0,0,12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="5*" />
-                        <ColumnDefinition Width="12" />
-                        <ColumnDefinition Width="6*" />
-                    </Grid.ColumnDefinitions>
-
-                    <Border Style="{StaticResource SectionCard}" Margin="0" Padding="6">
-                        <ListBox ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}" Background="Transparent" BorderThickness="0"
-                                 HorizontalContentAlignment="Stretch" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.ScrollUnit="Pixel"
-                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                            <ListBox.ItemContainerStyle>
-                                <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
-                                    <Setter Property="AutomationProperties.Name" Value="{Binding Name}" />
-                                    <Setter Property="Padding" Value="6,4" />
-                                </Style>
-                            </ListBox.ItemContainerStyle>
-                            <ListBox.ItemTemplate>
-                                <DataTemplate DataType="{x:Type vm:DirRow}">
-                                    <Grid Background="Transparent" ContextMenu="{StaticResource ItemMenu}"
-                                          Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}">
-                                        <Grid.InputBindings>
-                                            <MouseBinding Gesture="LeftDoubleClick" Command="{Binding DataContext.OpenRowCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
-                                        </Grid.InputBindings>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <Border Width="10" Height="28" CornerRadius="3" Background="{Binding ColorBrush}" VerticalAlignment="Center" />
-                                        <StackPanel Grid.Column="1" Margin="10,0">
-                                            <StackPanel Orientation="Horizontal">
-                                                <ui:SymbolIcon Symbol="Folder24" FontSize="14" Margin="0,0,6,0" Visibility="{Binding IsFolder, Converter={StaticResource BoolVis}}" />
-                                                <TextBlock Style="{StaticResource BodyText}" FontWeight="SemiBold" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
-                                            </StackPanel>
-                                            <ProgressBar Style="{StaticResource ThinProgress}" Height="4" Margin="0,4,0,2" Maximum="1" Value="{Binding Fraction, Mode=OneWay}"
-                                                         Foreground="{Binding ColorBrush}" />
-                                            <TextBlock Style="{StaticResource CaptionText}" Text="{Binding FilesText}" />
-                                        </StackPanel>
-                                        <StackPanel Grid.Column="2" HorizontalAlignment="Right">
-                                            <TextBlock Style="{StaticResource BodyText}" FontWeight="SemiBold" HorizontalAlignment="Right" Text="{Binding SizeText}" />
-                                            <TextBlock Style="{StaticResource CaptionText}" HorizontalAlignment="Right" Text="{Binding Fraction, StringFormat={}{0:P1}}" />
-                                        </StackPanel>
-                                    </Grid>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
+                    <TextBlock DockPanel.Dock="Bottom" Margin="4,6,0,0" Style="{StaticResource CaptionText}" Text="{Binding TreemapTitle}" TextTrimming="CharacterEllipsis" />
+                    <Border CornerRadius="8" ClipToBounds="True">
+                        <c:TreemapView Root="{Binding TreemapRoot}" ActivateCommand="{Binding RevealCommand}" />
                     </Border>
+                </DockPanel>
+            </Border>
+        </Grid>
 
-                    <Border Grid.Column="2" Style="{StaticResource SectionCard}" Margin="0" Padding="6" ClipToBounds="True">
-                        <c:TreemapView Root="{Binding CurrentNode}" ActivateCommand="{Binding NavigateCommand}" />
-                    </Border>
+        <GridSplitter Grid.Row="3" Height="8" HorizontalAlignment="Stretch" Background="Transparent" Cursor="SizeNS" ResizeBehavior="PreviousAndNext"
+                      Visibility="{Binding HasResult, Converter={StaticResource BoolVis}}" />
+
+        <!-- ================= Painel inferior ================= -->
+        <Border Grid.Row="4" Style="{StaticResource SectionCard}" Margin="0" Padding="10,8" Visibility="{Binding HasResult, Converter={StaticResource BoolVis}}">
+            <DockPanel>
+                <Grid DockPanel.Dock="Top" Margin="0,0,0,6">
+                    <WrapPanel>
+                        <RadioButton Style="{StaticResource SegmentButton}" Padding="14,5" GroupName="Baixo" Content="Maiores arquivos" IsChecked="{Binding BottomTab, Converter={StaticResource EnumEq}, ConverterParameter=0}" />
+                        <RadioButton Style="{StaticResource SegmentButton}" Padding="14,5" GroupName="Baixo" Content="Tipos de arquivo" IsChecked="{Binding BottomTab, Converter={StaticResource EnumEq}, ConverterParameter=1}" />
+                    </WrapPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+                        <ui:Button Margin="0,0,6,0" Padding="10,5" Content="Explorador" Icon="{ui:SymbolIcon Open24}" Command="{Binding ShowInExplorerCommand}" CommandParameter="{Binding SelectedRow}"
+                                   ToolTip="Mostrar a pasta selecionada no Explorador" />
+                        <ui:Button Margin="0,0,6,0" Padding="10,5" Content="Mover…" Icon="{ui:SymbolIcon ArrowMove24}" Command="{Binding MoveCommand}" CommandParameter="{Binding SelectedRow}"
+                                   ToolTip="Mover a pasta selecionada para outro disco" />
+                        <ui:Button Padding="10,5" Appearance="Danger" Content="Lixeira" Icon="{ui:SymbolIcon Delete24}" Command="{Binding RecycleCommand}" CommandParameter="{Binding SelectedRow}"
+                                   ToolTip="Enviar a pasta selecionada para a Lixeira (tecla Delete)" />
+                        <ui:ProgressRing Width="18" Height="18" Margin="8,0,0,0" IsIndeterminate="True" Visibility="{Binding IsWorking, Converter={StaticResource BoolVis}}" />
+                    </StackPanel>
                 </Grid>
 
-                <!-- Ações da pasta selecionada -->
-                <WrapPanel Margin="0,0,0,12">
-                    <ui:Button Margin="0,0,8,0" Content="Abrir" Icon="{ui:SymbolIcon FolderOpen24}" Command="{Binding OpenRowCommand}" CommandParameter="{Binding SelectedRow}" />
-                    <ui:Button Margin="0,0,8,0" Content="Mostrar no Explorador" Icon="{ui:SymbolIcon Open24}" Command="{Binding ShowInExplorerCommand}" CommandParameter="{Binding SelectedRow}" />
-                    <ui:Button Margin="0,0,8,0" Content="Mover para outro disco…" Icon="{ui:SymbolIcon ArrowMove24}" Command="{Binding MoveCommand}" CommandParameter="{Binding SelectedRow}" />
-                    <ui:Button Appearance="Danger" Content="Enviar para a Lixeira" Icon="{ui:SymbolIcon Delete24}" Command="{Binding RecycleCommand}" CommandParameter="{Binding SelectedRow}" />
-                    <ui:ProgressRing Width="20" Height="20" Margin="12,0,0,0" IsIndeterminate="True" Visibility="{Binding IsWorking, Converter={StaticResource BoolVis}}" />
-                </WrapPanel>
-
-                <!-- Maiores arquivos e tipos -->
-                <WrapPanel Margin="0,0,0,8">
-                    <RadioButton Style="{StaticResource SegmentButton}" GroupName="Baixo" Content="Maiores arquivos" IsChecked="{Binding BottomTab, Converter={StaticResource EnumEq}, ConverterParameter=0}" />
-                    <RadioButton Style="{StaticResource SegmentButton}" GroupName="Baixo" Content="Tipos de arquivo" IsChecked="{Binding BottomTab, Converter={StaticResource EnumEq}, ConverterParameter=1}" />
-                </WrapPanel>
-
-                <Border Style="{StaticResource SectionCard}" Padding="6" Height="380"
-                        Visibility="{Binding BottomTab, Converter={StaticResource EnumVisInt}, ConverterParameter=0}">
+                <Grid>
                     <ListBox ItemsSource="{Binding LargestFiles}" SelectedItem="{Binding SelectedFile}" Background="Transparent" BorderThickness="0"
                              HorizontalContentAlignment="Stretch" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.ScrollUnit="Pixel"
-                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" Visibility="{Binding BottomTab, Converter={StaticResource EnumVis}, ConverterParameter=0}">
                         <ListBox.ItemContainerStyle>
                             <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
                                 <Setter Property="AutomationProperties.Name" Value="{Binding File.Name}" />
-                                <Setter Property="Padding" Value="6,3" />
+                                <Setter Property="Padding" Value="6,2" />
                             </Style>
                         </ListBox.ItemContainerStyle>
                         <ListBox.ItemTemplate>
@@ -250,49 +394,48 @@
                                         </ContextMenu>
                                     </Grid.ContextMenu>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="28" />
+                                        <ColumnDefinition Width="26" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="140" />
-                                        <ColumnDefinition Width="100" />
+                                        <ColumnDefinition Width="90" />
                                     </Grid.ColumnDefinitions>
                                     <Image Width="18" Height="18" Source="{Binding Icon}" />
                                     <StackPanel Grid.Column="1" Margin="6,0">
-                                        <TextBlock Style="{StaticResource BodyText}" Text="{Binding File.Name}" TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Style="{StaticResource CaptionText}" Text="{Binding Folder}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                                        <TextBlock Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding File.Name}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="{Binding Folder}" TextTrimming="CharacterEllipsis" />
                                     </StackPanel>
                                     <TextBlock Grid.Column="2" Style="{StaticResource CaptionText}" VerticalAlignment="Center" Text="{Binding Kind}" />
-                                    <TextBlock Grid.Column="3" Style="{StaticResource BodyText}" FontWeight="SemiBold" VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding SizeText}" />
+                                    <TextBlock Grid.Column="3" FontFamily="{StaticResource NumberFont}" FontWeight="SemiBold" VerticalAlignment="Center" HorizontalAlignment="Right"
+                                               Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding SizeText}" />
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-                </Border>
 
-                <Border Style="{StaticResource SectionCard}" Padding="12" Height="380"
-                        Visibility="{Binding BottomTab, Converter={StaticResource EnumVisInt}, ConverterParameter=1}">
                     <ListBox ItemsSource="{Binding Extensions}" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch"
-                             VirtualizingPanel.ScrollUnit="Pixel" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                             VirtualizingPanel.ScrollUnit="Pixel" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             Visibility="{Binding BottomTab, Converter={StaticResource EnumVis}, ConverterParameter=1}">
                         <ListBox.ItemTemplate>
                             <DataTemplate DataType="{x:Type vm:ExtensionRow}">
-                                <Grid Margin="0,3">
+                                <Grid Margin="0,2">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="140" />
-                                        <ColumnDefinition Width="160" />
+                                        <ColumnDefinition Width="130" />
+                                        <ColumnDefinition Width="150" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="110" />
-                                        <ColumnDefinition Width="100" />
+                                        <ColumnDefinition Width="90" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Style="{StaticResource BodyText}" FontWeight="SemiBold" Text="{Binding Stat.Extension}" />
+                                    <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding Stat.Extension}" />
                                     <TextBlock Grid.Column="1" Style="{StaticResource CaptionText}" VerticalAlignment="Center" Text="{Binding Stat.Kind}" />
                                     <ProgressBar Grid.Column="2" Style="{StaticResource ThinProgress}" VerticalAlignment="Center" Margin="0,0,12,0" Maximum="1" Value="{Binding Fraction, Mode=OneWay}" />
                                     <TextBlock Grid.Column="3" Style="{StaticResource CaptionText}" VerticalAlignment="Center" Text="{Binding Stat.Count, StringFormat={}{0:N0} arquivos}" />
-                                    <TextBlock Grid.Column="4" Style="{StaticResource BodyText}" FontWeight="SemiBold" HorizontalAlignment="Right" Text="{Binding SizeText}" />
+                                    <TextBlock Grid.Column="4" FontFamily="{StaticResource NumberFont}" FontWeight="SemiBold" HorizontalAlignment="Right" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding SizeText}" />
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-                </Border>
-            </StackPanel>
-        </StackPanel>
-    </ScrollViewer>
+                </Grid>
+            </DockPanel>
+        </Border>
+    </Grid>
 </UserControl>
