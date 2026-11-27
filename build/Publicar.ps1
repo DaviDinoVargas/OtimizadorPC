@@ -8,10 +8,10 @@
     3. Publica o instalador como arquivo único autossuficiente, com o pacote embutido.
 
 .EXAMPLE
-    .\build\Publicar.ps1 -Versao 1.0.0
+    .\build\Publicar.ps1 -Versao 1.1.0
 #>
 param(
-    [string]$Versao = '1.0.0',
+    [string]$Versao = '1.1.0',
     [string]$Configuracao = 'Release'
 )
 
