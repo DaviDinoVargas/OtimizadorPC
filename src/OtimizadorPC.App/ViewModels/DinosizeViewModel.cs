@@ -84,8 +84,12 @@ public sealed partial class DinosizeViewModel : PageViewModel
     private Stopwatch? _clock;
     private DirNode? _root;
 
-    public DinosizeViewModel(IDiskScanner scanner, IFileOperations files, IDialogService dialogs, ISettingsService settings, SnapshotProvider snapshots)
+    private readonly IDuplicateScanner _duplicates;
+
+    public DinosizeViewModel(IDiskScanner scanner, IFileOperations files, IDialogService dialogs, ISettingsService settings, SnapshotProvider snapshots,
+        IDuplicateScanner duplicates)
     {
+        _duplicates = duplicates;
         _scanner = scanner;
         _files = files;
         _dialogs = dialogs;
@@ -220,6 +224,7 @@ public sealed partial class DinosizeViewModel : PageViewModel
 
     private void Apply(ScanResult r)
     {
+        ClearDuplicates();
         var method = r.Method == ScanMethod.Mft ? "Ultra (MFT)" : "Rápido";
         ResultSummary = $"{ByteSize.Format(r.Root.Size)} em {r.Root.TotalFiles:N0} arquivos e {r.Root.TotalDirs:N0} pastas · " +
                         $"{r.Duration.TotalSeconds:0.0} s no modo {method}" +
@@ -446,6 +451,8 @@ public sealed partial class DinosizeViewModel : PageViewModel
         {
             TreeRow r => r.FullPath,
             FileRow f => f.File.Path,
+            DuplicateFileRow d => d.File.Path,
+            string s => s,
             _ => SelectedRow?.FullPath,
         };
         if (path is null) return;

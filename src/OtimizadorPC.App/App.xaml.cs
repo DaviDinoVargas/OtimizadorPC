@@ -67,6 +67,7 @@ public partial class App : Application
         services.AddSingleton<IProcessService, OtimizadorPC.Infrastructure.Processes.ProcessService>();
         services.AddSingleton<IDiskScanner, OtimizadorPC.Infrastructure.DiskAnalysis.DiskScanner>();
         services.AddSingleton<IFileOperations, OtimizadorPC.Infrastructure.DiskAnalysis.FileOperations>();
+        services.AddSingleton<IDuplicateScanner, OtimizadorPC.Infrastructure.DiskAnalysis.DuplicateScanner>();
         services.AddSingleton<IInstalledProgramsService, OtimizadorPC.Infrastructure.Programs.InstalledProgramsService>();
         services.AddSingleton<IBenchmarkService, BenchmarkService>();
         services.AddSingleton<IBenchmarkHistory, BenchmarkHistory>();
