@@ -34,4 +34,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $setup = (Get-Item artifacts/OtimizadorPC-Setup-*.exe).FullName
-          gh release create "${{ github.ref_name }}" $setup --title "OtimizadorPC ${{ github.ref_name }}" --generate-notes
+          $notas = "docs/notas/${{ github.ref_name }}.md"
+          if (Test-Path $notas) {
+            gh release create "${{ github.ref_name }}" $setup --title "OtimizadorPC ${{ github.ref_name }}" --notes-file $notas
+          } else {
+            gh release create "${{ github.ref_name }}" $setup --title "OtimizadorPC ${{ github.ref_name }}" --generate-notes
+          }
