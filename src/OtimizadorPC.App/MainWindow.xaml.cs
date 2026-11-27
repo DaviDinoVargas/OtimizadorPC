@@ -15,16 +15,82 @@ public partial class MainWindow : FluentWindow
     private const double CompactWidth = 68;
 
     private readonly ISettingsService _settings;
+    private readonly MainViewModel _viewModel;
+    private readonly GameModeService _gameMode;
     private SidebarPosition? _appliedPosition;
+    private bool _exitRequested;
 
-    public MainWindow(MainViewModel viewModel, ISettingsService settings)
+    public MainWindow(MainViewModel viewModel, ISettingsService settings, GameModeService gameMode)
     {
         _settings = settings;
+        _viewModel = viewModel;
+        _gameMode = gameMode;
         DataContext = viewModel;
         InitializeComponent();
 
         ApplyLayout(settings.Current, animate: false);
         settings.Changed += (_, s) => Dispatcher.Invoke(() => ApplyLayout(s, animate: true));
+
+        gameMode.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName != nameof(GameModeService.IsActive)) return;
+            TrayGameMode.Header = gameMode.IsActive ? "Desligar Modo Jogo" : "Ligar Modo Jogo";
+            Tray.TooltipText = gameMode.IsActive ? "OtimizadorPC — Modo Jogo ligado" : "OtimizadorPC";
+        };
+    }
+
+    // =====================================================================
+    // Bandeja
+    // =====================================================================
+
+    /// <summary>O X esconde na bandeja (se a opção estiver ligada); "Sair" no ícone fecha de verdade.</summary>
+    protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+    {
+        if (!_exitRequested && _settings.Current.MinimizeToTray)
+        {
+            e.Cancel = true;
+            Hide();
+            return;
+        }
+        base.OnClosing(e);
+    }
+
+    protected override async void OnClosed(EventArgs e)
+    {
+        Tray.Unregister();
+        base.OnClosed(e);
+        // Não deixa o PC no plano de energia máximo se o programa for fechado com o Modo Jogo ligado
+        if (_gameMode.IsActive) await _gameMode.StopAsync();
+        Application.Current.Shutdown();
+    }
+
+    private void ShowFromTray()
+    {
+        Show();
+        if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal;
+        Activate();
+    }
+
+    private void OnTrayOpen(object sender, RoutedEventArgs e) => ShowFromTray();
+
+    private async void OnTrayGameMode(object sender, RoutedEventArgs e) => await _gameMode.ToggleAsync();
+
+    private void OnTrayCleanup(object sender, RoutedEventArgs e)
+    {
+        ShowFromTray();
+        _viewModel.NavigateTo("limpeza");
+    }
+
+    private void OnTrayDinosize(object sender, RoutedEventArgs e)
+    {
+        ShowFromTray();
+        _viewModel.NavigateTo("dinosize");
+    }
+
+    private void OnTrayExit(object sender, RoutedEventArgs e)
+    {
+        _exitRequested = true;
+        Close();
     }
 
     /// <summary>Aplica posição e largura da barra lateral e a escala da interface.</summary>
