@@ -21,3 +21,5 @@ public partial class PaletteAnimation : AnimatedIcon { public PaletteAnimation()
 public partial class SuccessAnimation : AnimatedIcon { public SuccessAnimation() => InitializeComponent(); }
 
 public partial class PackagesAnimation : AnimatedIcon { public PackagesAnimation() => InitializeComponent(); }
+
+public partial class SignalAnimation : AnimatedIcon { public SignalAnimation() => InitializeComponent(); }

@@ -268,3 +268,22 @@ public sealed class SupportToBrushConverter : IValueConverter
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         => throw new NotSupportedException();
 }
+
+/// <summary>Cor da nota da conexão: verde (excelente/boa), âmbar (regular), vermelho (ruim/sem resposta).</summary>
+public sealed class QualityToBrushConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        var key = value switch
+        {
+            OtimizadorPC.Core.Network.ConnectionQuality.Excelente or OtimizadorPC.Core.Network.ConnectionQuality.Boa => "SystemFillColorSuccessBrush",
+            OtimizadorPC.Core.Network.ConnectionQuality.Regular => "SystemFillColorCautionBrush",
+            OtimizadorPC.Core.Network.ConnectionQuality.Ruim or OtimizadorPC.Core.Network.ConnectionQuality.SemResposta => "SystemFillColorCriticalBrush",
+            _ => "TextFillColorTertiaryBrush",
+        };
+        return Application.Current.TryFindResource(key) as Brush ?? Brushes.Gray;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
