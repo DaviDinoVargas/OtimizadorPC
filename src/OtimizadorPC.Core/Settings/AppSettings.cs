@@ -21,7 +21,7 @@ public sealed class AppSettings
     public ThemeMode Theme { get; set; } = ThemeMode.Escuro;
     public bool UseSystemAccent { get; set; }
     public string AccentColor { get; set; } = "#14B8A6";
-    public BackdropMode Backdrop { get; set; } = BackdropMode.Mica;
+    public BackdropMode Backdrop { get; set; } = BackdropMode.Nenhum;
 
     // Layout
     public SidebarPosition SidebarPosition { get; set; } = SidebarPosition.Esquerda;

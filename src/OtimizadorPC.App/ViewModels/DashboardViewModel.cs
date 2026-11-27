@@ -53,6 +53,9 @@ public sealed partial class DashboardViewModel : PageViewModel
     public ObservableCollection<Recommendation> Recommendations { get; } = [];
 
     [ObservableProperty] private bool _hasRecommendations;
+    [ObservableProperty] private double _healthScore;
+    [ObservableProperty] private string _healthLabel = "Analisando…";
+    [ObservableProperty] private string _healthSummary = string.Empty;
 
     public override async Task OnNavigatedToAsync()
     {
@@ -155,6 +158,13 @@ public sealed partial class DashboardViewModel : PageViewModel
         Recommendations.Clear();
         foreach (var r in SystemAdvisor.Analyze(s)) Recommendations.Add(r);
         HasRecommendations = Recommendations.Count > 0;
+
+        var score = SystemAdvisor.HealthScore(Recommendations);
+        HealthScore = score;
+        HealthLabel = SystemAdvisor.HealthLabel(score);
+        HealthSummary = Recommendations.Count == 0
+            ? "Nenhum problema encontrado. Continue assim!"
+            : $"{Recommendations.Count} {(Recommendations.Count == 1 ? "ponto" : "pontos")} para melhorar — veja as recomendações abaixo.";
         HasSnapshot = true;
     }
 

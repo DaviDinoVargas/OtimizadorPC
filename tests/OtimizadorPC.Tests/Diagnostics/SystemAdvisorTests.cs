@@ -124,6 +124,17 @@ public sealed class SystemAdvisorTests
         Assert.Equal("saude-0", r[0].Id);
     }
 
+    [Fact]
+    public void Nota_de_saude_desconta_por_gravidade()
+    {
+        Recommendation R(Severity s) => new("x", s, "t", "d", null);
+        Assert.Equal(100, SystemAdvisor.HealthScore([]));
+        Assert.Equal(84, SystemAdvisor.HealthScore([R(Severity.Aviso), R(Severity.Dica)]));
+        Assert.Equal(5, SystemAdvisor.HealthScore([R(Severity.Critico), R(Severity.Critico), R(Severity.Critico), R(Severity.Critico), R(Severity.Critico)]));
+        Assert.Equal("Excelente", SystemAdvisor.HealthLabel(95));
+        Assert.Equal("Precisa de atenção", SystemAdvisor.HealthLabel(60));
+    }
+
     [Theory]
     [InlineData("A", false)]
     [InlineData("b", false)]

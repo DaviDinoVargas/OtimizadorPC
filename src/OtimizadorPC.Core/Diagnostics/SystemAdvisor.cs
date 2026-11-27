@@ -103,6 +103,26 @@ public static class SystemAdvisor
         return list.OrderByDescending(r => r.Severity).ToList();
     }
 
+    /// <summary>Nota de saúde de 0 a 100: começa em 100 e perde pontos por recomendação conforme a gravidade.</summary>
+    public static int HealthScore(IEnumerable<Recommendation> recommendations)
+    {
+        var score = 100 - recommendations.Sum(r => r.Severity switch
+        {
+            Severity.Critico => 25,
+            Severity.Aviso => 12,
+            _ => 4,
+        });
+        return Math.Clamp(score, 5, 100);
+    }
+
+    public static string HealthLabel(int score) => score switch
+    {
+        >= 90 => "Excelente",
+        >= 75 => "Bom",
+        >= 50 => "Precisa de atenção",
+        _ => "Crítico",
+    };
+
     /// <summary>O Windows não cria paginação nas letras A: e B: (reservadas a disquete).</summary>
     public static bool IsPageFileCapableLetter(string letter) =>
         !string.IsNullOrEmpty(letter) && char.ToUpperInvariant(letter[0]) is not ('A' or 'B');

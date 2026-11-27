@@ -48,6 +48,7 @@ public sealed class ThemeService
         else if (TryParseColor(s.AccentColor, out var color))
             ApplicationAccentColorManager.Apply(color, theme, false, false);
 
+        GamerPalette.Apply(theme);
         ApplyDensity(s.Density);
         AnimationSettings.Apply(s);
     }

@@ -25,13 +25,13 @@ public sealed partial class MainViewModel : ObservableObject
 
         MainItems =
         [
-            new NavItem { Key = "inicio", Title = "Início", Icon = SymbolRegular.Home24, ViewModelType = typeof(DashboardViewModel) },
-            new NavItem { Key = "info", Title = "Informações", Icon = SymbolRegular.DeveloperBoard24, ViewModelType = typeof(MachineInfoViewModel) },
-            new NavItem { Key = "limpeza", Title = "Limpeza", Icon = SymbolRegular.Broom24, ViewModelType = typeof(CleanupViewModel) },
-            new NavItem { Key = "otimizacao", Title = "Otimização", Icon = SymbolRegular.Gauge24, ViewModelType = typeof(OptimizationViewModel) },
-            new NavItem { Key = "processos", Title = "Processos", Icon = SymbolRegular.AppsList24, ViewModelType = typeof(ProcessesViewModel) },
-            new NavItem { Key = "dinosize", Title = "Dinosize", Icon = SymbolRegular.DataTreemap24, ViewModelType = typeof(DinosizeViewModel) },
-            new NavItem { Key = "overclock", Title = "Overclock", Icon = SymbolRegular.Rocket24, ViewModelType = typeof(OverclockViewModel) },
+            new NavItem { Group = "PAINEL", Key = "inicio", Title = "Início", Icon = SymbolRegular.Home24, ViewModelType = typeof(DashboardViewModel) },
+            new NavItem { Group = "PAINEL", Key = "info", Title = "Informações", Icon = SymbolRegular.DeveloperBoard24, ViewModelType = typeof(MachineInfoViewModel) },
+            new NavItem { Group = "FERRAMENTAS", Key = "limpeza", Title = "Limpeza", Icon = SymbolRegular.Broom24, ViewModelType = typeof(CleanupViewModel) },
+            new NavItem { Group = "FERRAMENTAS", Key = "otimizacao", Title = "Otimização", Icon = SymbolRegular.Gauge24, ViewModelType = typeof(OptimizationViewModel) },
+            new NavItem { Group = "FERRAMENTAS", Key = "processos", Title = "Processos", Icon = SymbolRegular.AppsList24, ViewModelType = typeof(ProcessesViewModel) },
+            new NavItem { Group = "FERRAMENTAS", Key = "dinosize", Title = "Dinosize", Icon = SymbolRegular.DataTreemap24, ViewModelType = typeof(DinosizeViewModel) },
+            new NavItem { Group = "DESEMPENHO", Key = "overclock", Title = "Overclock", Icon = SymbolRegular.Rocket24, ViewModelType = typeof(OverclockViewModel) },
         ];
 
         FooterItems =
